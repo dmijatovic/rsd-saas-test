@@ -1,0 +1,42 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+.idea
+**/target
+**.iml
+
+# .vscode
+
+node_modules
+
+.pnp
+.pnp.js
+
+# testing
+coverage
+
+# next.js
+.next
+out
+
+# frontend production build
+build
+
+# misc
+.DS_Store
+*.pem
+
+# debug node temp files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# local env files except example
+.env
+.env.*
+!.env.example
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo

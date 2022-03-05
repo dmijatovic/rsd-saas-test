@@ -1,0 +1,42 @@
+
+name: docker build frontend
+
+on:
+  push:
+    branches:
+      - release
+    paths:
+      - "frontend/**"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: "get-npm-version-frontend"
+        id: package-version-frontend
+        uses: martinbeentjes/npm-get-version-action@master
+        with:
+          path: frontend
+      - name: "get-npm-version-rsd"
+        id: package-version-rsd
+        uses: martinbeentjes/npm-get-version-action@master
+        with:
+          path: deployment
+      - name: "build frontend image"
+        run: |
+          IMAGE_TAG=ghcr.io/research-software-directory/rsd-saas/frontend
+          echo image_tag $IMAGE_TAG
+          IMAGE_TAG_RSD=ghcr.io/research-software-directory/rsd-saas/frontend:${{steps.package-version-rsd.outputs.current-version}}
+          echo image_tag_rsd $IMAGE_TAG_RSD
+          IMAGE_TAG_FE=ghcr.io/research-software-directory/rsd-saas/frontend:${{steps.package-version-frontend.outputs.current-version}}
+          echo image_tag_fe $IMAGE_TAG_FE
+          docker build -t $IMAGE_TAG_RSD -t $IMAGE_TAG_FE -t $IMAGE_TAG -f frontend/Dockerfile ./frontend
+      - name: "login to ghcr"
+        run: echo "${{secrets.GITHUB_TOKEN}}" | docker login https://ghcr.io -u ${{github.actor}} --password-stdin
+      - name: "push image to ghcr"
+        run: |
+          echo push frontend image with all tags
+          docker push ghcr.io/research-software-directory/rsd-saas/frontend --all-tags
+
+

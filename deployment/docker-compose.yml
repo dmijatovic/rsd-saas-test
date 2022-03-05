@@ -1,0 +1,114 @@
+# THIS DOCKER FILE REQUIRES .env FILE
+version: "3.0"
+
+services:
+  database:
+    container_name: database
+    image: ghcr.io/research-software-directory/rsd-saas/database:1.0.1-alpha
+    expose:
+      - 5432
+    environment:
+      - POSTGRES_DB
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+    volumes:
+      # persist data in named docker volume
+      # to remove use: docker-compose down --volumes
+      # to inspect use: docker volume ls
+      - pgdb:/var/lib/postgresql/data/
+    networks:
+      - net
+
+  backend:
+    container_name: backend
+    image: ghcr.io/research-software-directory/rsd-saas/backend:1.0.1-alpha
+    expose:
+      - 3500
+    environment:
+      # it needs to be here to use values from .env file
+      - PGRST_DB_URI=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@database:5432/rsd-db
+      - PGRST_DB_ANON_ROLE
+      - PGRST_DB_SCHEMA
+      - PGRST_SERVER_PORT
+      - PGRST_JWT_SECRET
+    depends_on:
+      - database
+    networks:
+      - net
+
+  auth:
+    container_name: auth
+    image: ghcr.io/research-software-directory/rsd-saas/auth:1.0.1-alpha
+    expose:
+      - 7000
+    environment:
+      # it uses values from .env file
+      - POSTGREST_URL
+      - NEXT_PUBLIC_SURFCONEXT_CLIENT_ID
+      - NEXT_PUBLIC_SURFCONEXT_REDIRECT
+      - NEXT_PUBLIC_SURFCONEXT_WELL_KNOWN_URL
+      - AUTH_SURFCONEXT_CLIENT_SECRET
+      - PGRST_JWT_SECRET
+    depends_on:
+      - database
+      - backend
+    networks:
+      - net
+
+  frontend:
+    container_name: frontend
+    image: ghcr.io/research-software-directory/rsd-saas/frontend:1.0.1-alpha
+    environment:
+      - POSTGREST_URL
+      - RSD_AUTH_URL
+      - PGRST_JWT_SECRET
+      - NEXT_PUBLIC_SURFCONEXT_CLIENT_ID
+      - NEXT_PUBLIC_SURFCONEXT_REDIRECT
+      - NEXT_PUBLIC_SURFCONEXT_WELL_KNOWN_URL
+    expose:
+      - 3000
+    depends_on:
+      - database
+      - backend
+      - auth
+    networks:
+      - net
+
+  scrapers:
+    container_name: scrapers
+    image: ghcr.io/research-software-directory/rsd-saas/scrapers:1.0.0-alpha
+    environment:
+      # it uses values from .env file
+      - POSTGREST_URL
+      - PGRST_JWT_SECRET
+      - MAX_REQUESTS_GITHUB
+      - API_CREDENTIALS_GITHUB
+      - ZENODO_ACCESS_TOKEN
+    depends_on:
+      - database
+      - backend
+    networks:
+      - net
+  nginx:
+    container_name: nginx
+    image: ghcr.io/research-software-directory/rsd-saas/nginx:latest
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - database
+      - backend
+      - auth
+      - frontend
+    networks:
+      - net
+
+# define name for docker network
+# it should have name: rsd-as-a-service_net
+networks:
+  net:
+
+# named volumes can be managed easier using docker-compose
+# volume should have name rsd-as-a-service_pgdb
+volumes:
+  pgdb:

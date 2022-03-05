@@ -1,0 +1,8 @@
+FROM maven:3.8.3-openjdk-17
+WORKDIR /usr/mymaven
+RUN mkdir --parents ./src/main
+COPY pom.xml .
+RUN mvn clean package -Dmaven.main.skip -Dmaven.test.skip && rm -r ./target && mvn exec:java --fail-never
+COPY src/main ./src/main
+RUN mvn compile
+CMD mvn exec:java
