@@ -4,7 +4,7 @@ version: "3.0"
 services:
   database:
     container_name: database
-    image: ghcr.io/research-software-directory/rsd-saas/database:1.0.1-alpha
+    image: ghcr.io/research-software-directory/rsd-saas/database:latest
     expose:
       - 5432
     environment:
@@ -21,7 +21,7 @@ services:
 
   backend:
     container_name: backend
-    image: ghcr.io/research-software-directory/rsd-saas/backend:1.0.1-alpha
+    image: ghcr.io/research-software-directory/rsd-saas/backend:latest
     expose:
       - 3500
     environment:
@@ -38,7 +38,7 @@ services:
 
   auth:
     container_name: auth
-    image: ghcr.io/research-software-directory/rsd-saas/auth:1.0.1-alpha
+    image: ghcr.io/research-software-directory/rsd-saas/auth:latest
     expose:
       - 7000
     environment:
@@ -57,7 +57,7 @@ services:
 
   frontend:
     container_name: frontend
-    image: ghcr.io/research-software-directory/rsd-saas/frontend:1.0.1-alpha
+    image: ghcr.io/research-software-directory/rsd-saas/frontend:latest
     environment:
       - POSTGREST_URL
       - RSD_AUTH_URL
@@ -76,7 +76,7 @@ services:
 
   scrapers:
     container_name: scrapers
-    image: ghcr.io/research-software-directory/rsd-saas/scrapers:1.0.0-alpha
+    image: ghcr.io/research-software-directory/rsd-saas/scrapers:latest
     environment:
       # it uses values from .env file
       - POSTGREST_URL

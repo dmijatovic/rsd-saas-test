@@ -3,4 +3,5 @@
 # docker-compose default .env file
 .env
 .env.*
+!.env.example
 

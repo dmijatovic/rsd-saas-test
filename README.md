@@ -1,6 +1,11 @@
-![](https://user-images.githubusercontent.com/4195550/136156498-736f915f-7623-43d2-8678-f30b06563a38.png)
-
 # RSD-as-a-service
+
+![image](https://user-images.githubusercontent.com/4195550/136156498-736f915f-7623-43d2-8678-f30b06563a38.png)
+
+[![GitHub license](https://img.shields.io/badge/license-Apache--2.0%20-blue.svg)](https://github.com/research-software-directory/RSD-as-a-service/blob/main/LICENSE)
+[![fair-software.eu](https://img.shields.io/badge/fair--software.eu-%E2%97%8F%20%20%E2%97%8F%20%20%E2%97%8B%20%20%E2%97%8F%20%20%E2%97%8B-orange)](https://fair-software.eu)
+![All tests](https://github.com/research-software-directory/RSD-as-a-service/actions/workflows/tests_main.yml/badge.svg)
+[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](code_of_conduct.md)
 
 ## Our mission: To promote the visibility, impact and reuse of research software
 
@@ -12,7 +17,7 @@ The program can easily be built with `docker-compose`. Each service builds the i
 
 ### Environment variables
 
-The environment variables should be stored in .env file, which automatically loaded by docker-compose. To validate which env variables are loaded you can use `docker-compose config`. More info about enviroment variables in docker-compose is available at [official docs pages](https://docs.docker.com/compose/environment-variables/)
+The environment variables should be stored in .env file, which is automatically loaded by docker-compose. To validate loading of env variables use `docker-compose config`. More info about use of enviroment variables in docker-compose is available at [official documentation](https://docs.docker.com/compose/environment-variables/)
 
 - copy the file `.env.example` to `.env` file at the root of the project
 
@@ -42,7 +47,7 @@ The application can be viewed on http://localhost
 
 ### Frontend with hot-module-replacement (HMR)
 
-To run frontend in the development mode with the hot-module-replacement (HMR) you need to start another instance of frontend
+To run frontend in the development mode with the hot-module-replacement (HMR) you should start additional instance of the frontend which will be available at http://localhost:3000
 
 ```bash
 # navigate to frontend folder
