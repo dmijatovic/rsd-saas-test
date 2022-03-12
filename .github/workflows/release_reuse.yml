@@ -43,7 +43,7 @@ jobs:
     with:
       ghcr_user: ${{github.actor}}
       base_image_name: ghcr.io/dmijatovic/rsd-saas/auth
-      image_tag: ${{steps.changelog.outputs.tag}}
+      image_tag: ${{needs.release_tag.outputs.tag}}
       dockerfile: authentication/dockerfile
       docker_context: ./authentication
     secrets:
@@ -57,7 +57,7 @@ jobs:
     with:
       ghcr_user: ${{github.actor}}
       base_image_name: ghcr.io/dmijatovic/rsd-saas/database
-      image_tag: ${{steps.changelog.outputs.tag}}
+      image_tag: ${{needs.release_tag.outputs.tag}}
       dockerfile: database/dockerfile
       docker_context: ./database
     secrets:
