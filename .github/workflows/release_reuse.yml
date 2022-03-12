@@ -34,17 +34,18 @@ jobs:
           skip-git-pull: true
           # skip tag push - it will not push but it will tag
           git-push: false
-  check:
+
+  log_release_tag:
     needs: release_tag
-    name: show results of previous job
+    name: log release_tag output
     runs-on: ubuntu-latest
     steps:
-      - name: show info
+      - name: info
         run: |
           echo skipped=${{needs.release_tag.outputs.skipped}}
           echo tag=${{needs.release_tag.outputs.tag}}
-          echo changelog=${{needs.release_tag.outputs.changelog}}
   auth:
+    # it needs to be check on string value
     if: needs.release_tag.outputs.skipped == 'false'
     needs: release_tag
     name: auth image (build and push)
@@ -59,6 +60,7 @@ jobs:
       token: ${{secrets.GITHUB_TOKEN}}
 
   database:
+    # it needs to be check on string value
     if: needs.release_tag.outputs.skipped == 'false'
     needs: release_tag
     name: database image (build and push)
@@ -120,9 +122,10 @@ jobs:
       #     echo push scrapers image with all tags
       #     docker push ghcr.io/research-software-directory/rsd-saas/scrapers --all-tags
   deployment_files:
-    name: create deployment.zip
-    if: needs.release_tag.outputs.skipped == false
+    # it needs to be check on string value
+    if: needs.release_tag.outputs.skipped == 'false'
     needs: [release_tag,auth,database]
+    name: create deployment.zip
     runs-on: ubuntu-latest
     steps:
       - name: checkout main branch
@@ -172,7 +175,8 @@ jobs:
           file_pattern: CITATION.cff
 
   draft_release:
-    if: needs.release_tag.outputs.skipped == false
+    # it needs to be check on string value
+    if: needs.release_tag.outputs.skipped == 'false'
     needs: [release_tag, deployment_files]
     name: create release
     runs-on: ubuntu-latest
