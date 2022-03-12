@@ -34,8 +34,18 @@ jobs:
           skip-git-pull: true
           # skip tag push - it will not push but it will tag
           git-push: false
+  check:
+    needs: release_tag
+    name: show results of previous job
+    runs-on: ubuntu-latest
+    steps:
+      - name: show info
+        run: |
+          echo skipped=${{needs.release_tag.outputs.skipped}}
+          echo tag=${{needs.release_tag.outputs.tag}}
+          echo changelog=${{needs.release_tag.outputs.changelog}}
   auth:
-    if: needs.release_tag.outputs.skipped == false
+    if: needs.release_tag.outputs.skipped == 'false'
     needs: release_tag
     name: auth image (build and push)
     uses: ./.github/workflows/reuse_ghcr.yml
@@ -49,7 +59,7 @@ jobs:
       token: ${{secrets.GITHUB_TOKEN}}
 
   database:
-    if: needs.release_tag.outputs.skipped == false
+    if: needs.release_tag.outputs.skipped == 'false'
     needs: release_tag
     name: database image (build and push)
     uses: ./.github/workflows/reuse_ghcr.yml
