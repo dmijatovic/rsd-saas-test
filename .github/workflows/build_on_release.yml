@@ -14,7 +14,7 @@ jobs:
           echo tag_name=${{github.event.release.tag_name}}
   auth:
     # only if have tag
-    if: github.event.release.tag_name != ''
+    if: startsWith(github.event.release.tag_name,"v")
     needs: log_version
     name: auth
     uses: ./.github/workflows/_ghcr.yml
@@ -29,7 +29,7 @@ jobs:
 
   database:
     # it needs to be check on string value
-    if: github.event.release.tag_name != ''
+    if: startsWith(github.event.release.tag_name,"v")
     needs: log_version
     name: database
     uses: ./.github/workflows/_ghcr.yml
@@ -41,5 +41,76 @@ jobs:
       docker_context: ./database
     secrets:
       token: ${{secrets.GITHUB_TOKEN}}
+
+  backend:
+    # it needs to be check on string value
+    if: startsWith(github.event.release.tag_name,"v")
+    needs: release_tag
+    name: backend api
+    uses: ./.github/workflows/_ghcr.yml
+    with:
+      ghcr_user: ${{github.actor}}
+      base_image_name: ghcr.io/dmijatovic/rsd-saas/backend
+      image_tag: ${{needs.release_tag.outputs.tag}}
+      dockerfile: backend-postgrest/dockerfile
+      docker_context: ./backend-postgrest
+    secrets:
+      token: ${{secrets.GITHUB_TOKEN}}
+
+  frontend:
+    # it needs to be check on string value
+    if: startsWith(github.event.release.tag_name,"v")
+    needs: release_tag
+    name: frontend
+    uses: ./.github/workflows/_ghcr.yml
+    with:
+      ghcr_user: ${{github.actor}}
+      base_image_name: ghcr.io/dmijatovic/rsd-saas/frontend
+      image_tag: ${{needs.release_tag.outputs.tag}}
+      dockerfile: frontend/Dockerfile
+      docker_context: ./frontend
+    secrets:
+      token: ${{secrets.GITHUB_TOKEN}}
+
+  nginx:
+    # it needs to be check on string value
+    if: startsWith(github.event.release.tag_name,"v")
+    needs: release_tag
+    name: nginx
+    uses: ./.github/workflows/_ghcr.yml
+    with:
+      ghcr_user: ${{github.actor}}
+      base_image_name: ghcr.io/dmijatovic/rsd-saas/nginx
+      image_tag: ${{needs.release_tag.outputs.tag}}
+      dockerfile: nginx/dockerfile
+      docker_context: ./nginx
+    secrets:
+      token: ${{secrets.GITHUB_TOKEN}}
+
+  scrapers:
+    # it needs to be check on string value
+    if: startsWith(github.event.release.tag_name,"v")
+    needs: release_tag
+    name: scrapers
+    uses: ./.github/workflows/_ghcr.yml
+    with:
+      ghcr_user: ${{github.actor}}
+      base_image_name: ghcr.io/dmijatovic/rsd-saas/scrapers
+      image_tag: ${{needs.release_tag.outputs.tag}}
+      dockerfile: scrapers/dockerfile
+      docker_context: ./scrapers
+    secrets:
+      token: ${{secrets.GITHUB_TOKEN}}
+
+  citation:
+   # it needs to be check on string value
+    if: startsWith(github.event.release.tag_name,"v")
+    needs: [auth,database,backend,frontend,nginx,scrapers]
+    name: citations
+    uses: ./.github/workflows/_citation.yml
+    with:
+      version_tag: ${{github.event.release.tag_name}}
+      branch: master
+      commit_message: "chore(release): update citation file"
 
 
