@@ -45,7 +45,7 @@ jobs:
   backend:
     # it needs to be check on string value
     if: startsWith(github.event.release.tag_name,'v')
-    needs: release_tag
+    needs: log_version
     name: backend api
     uses: ./.github/workflows/_ghcr.yml
     with:
@@ -60,7 +60,7 @@ jobs:
   frontend:
     # it needs to be check on string value
     if: startsWith(github.event.release.tag_name,'v')
-    needs: release_tag
+    needs: log_version
     name: frontend
     uses: ./.github/workflows/_ghcr.yml
     with:
@@ -75,7 +75,7 @@ jobs:
   nginx:
     # it needs to be check on string value
     if: startsWith(github.event.release.tag_name,'v')
-    needs: release_tag
+    needs: log_version
     name: nginx
     uses: ./.github/workflows/_ghcr.yml
     with:
@@ -90,7 +90,7 @@ jobs:
   scrapers:
     # it needs to be check on string value
     if: startsWith(github.event.release.tag_name,'v')
-    needs: release_tag
+    needs: log_version
     name: scrapers
     uses: ./.github/workflows/_ghcr.yml
     with:
