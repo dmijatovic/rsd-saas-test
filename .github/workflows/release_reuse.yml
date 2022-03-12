@@ -12,13 +12,12 @@ jobs:
       tag: ${{steps.changelog.outputs.tag}}
       skipped: ${{steps.changelog.outputs.skipped}}
     steps:
-      - name: checkout branch with all history
-        # https://github.com/actions/checkout
-        uses: actions/checkout@v3
-        with:
-          # checkout whole history of main branch
-          ref: main
-          fetch-depth: 0
+      # - name: checkout all history
+      #   # https://github.com/actions/checkout
+      #   uses: actions/checkout@v3
+      #   with:
+      #     # checkout whole history
+      #     fetch-depth: 0
 
       - name: calculate new version and create changelog content
         id: changelog
@@ -32,7 +31,7 @@ jobs:
           # do not create additional commit, just tag current commit with the version
           skip-commit: true
           # do not pull - we already checked out the selection we want to use for versioning
-          skip-git-pull: true
+          # skip-git-pull: true
           # skip tag push - it will not push but it will tag
           git-push: false
   auth:
