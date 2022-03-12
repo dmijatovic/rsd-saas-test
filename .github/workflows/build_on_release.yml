@@ -1,0 +1,21 @@
+name: build images on release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  get_version:
+    uses: ./.github/workflows/_version.yml
+    with:
+      branch: master
+
+  log_version:
+    needs: get_version
+    runs-on: ubuntu-latest
+    steps:
+      - name: log version
+        run: |
+          echo version=${{needs.get_version.outputs.version}}
+
+
