@@ -28,10 +28,10 @@ jobs:
           ref: ${{inputs.branch}}
 
       - name: update CITATION.cff
-        # use doublequotes in second replace "" to enable variable substitution with bash
+        # use doublequotes to enable variable substitution with bash
         run: |
           echo replace version line
-          sed -i -e 's/^version:.*/version: ${{needs.release_tag.outputs.tag}}/' CITATION.cff
+          sed -i -e "s/^version:.*/version: ${{inputs.version_tag}}/" CITATION.cff
           echo replace date
           sed -i -e "s/^date-released:.*/date-released: '$(date +%F)'/" CITATION.cff
           cat CITATION.cff
