@@ -74,53 +74,66 @@ jobs:
     secrets:
       token: ${{secrets.GITHUB_TOKEN}}
 
-      # - name: backend image (build and push)
-      #   if: ${{steps.changelog.outputs.skipped == 'false'}}
-      #   run: |
-      #     IMAGE_TAG=ghcr.io/research-software-directory/rsd-saas/backend
-      #     echo image_tag $IMAGE_TAG
-      #     IMAGE_TAG_RSD=ghcr.io/research-software-directory/rsd-saas/backend:${{steps.changelog.outputs.tag}}
-      #     echo image_tag_rsd $IMAGE_TAG_RSD
-      #     docker build -t $IMAGE_TAG_RSD -t $IMAGE_TAG -f backend-postgrest/dockerfile ./backend-postgrest
-      #     echo "${{secrets.GITHUB_TOKEN}}" | docker login https://ghcr.io -u ${{github.actor}} --password-stdin
-      #     echo backend image with all tags
-      #     docker push ghcr.io/research-software-directory/rsd-saas/backend --all-tags
+  backend:
+    # it needs to be check on string value
+    if: needs.release_tag.outputs.skipped == 'false'
+    needs: release_tag
+    name: backend api image (build and push)
+    uses: ./.github/workflows/_ghcr.yml
+    with:
+      ghcr_user: ${{github.actor}}
+      base_image_name: ghcr.io/dmijatovic/rsd-saas/backend
+      image_tag: ${{needs.release_tag.outputs.tag}}
+      dockerfile: backend-postgrest/dockerfile
+      docker_context: ./backend-postgrest
+    secrets:
+      token: ${{secrets.GITHUB_TOKEN}}
 
-      # - name: frontend image (build and push)
-      #   if: ${{steps.changelog.outputs.skipped == 'false'}}
-      #   run: |
-      #     IMAGE_TAG=ghcr.io/research-software-directory/rsd-saas/frontend
-      #     echo image_tag $IMAGE_TAG
-      #     IMAGE_TAG_RSD=ghcr.io/research-software-directory/rsd-saas/frontend:${{steps.changelog.outputs.tag}}
-      #     echo image_tag_rsd $IMAGE_TAG_RSD
-      #     docker build -t $IMAGE_TAG_RSD -t $IMAGE_TAG -f frontend/Dockerfile ./frontend
-      #     echo "${{secrets.GITHUB_TOKEN}}" | docker login https://ghcr.io -u ${{github.actor}} --password-stdin
-      #     echo push frontend image with all tags
-      #     docker push ghcr.io/research-software-directory/rsd-saas/frontend --all-tags
+  frontend:
+    # it needs to be check on string value
+    if: needs.release_tag.outputs.skipped == 'false'
+    needs: release_tag
+    name: frontend image (build and push)
+    uses: ./.github/workflows/_ghcr.yml
+    with:
+      ghcr_user: ${{github.actor}}
+      base_image_name: ghcr.io/dmijatovic/rsd-saas/frontend
+      image_tag: ${{needs.release_tag.outputs.tag}}
+      dockerfile: frontend/Dockerfile
+      docker_context: ./frontend
+    secrets:
+      token: ${{secrets.GITHUB_TOKEN}}
 
-      # - name: nginx image (build and push)
-      #   if: ${{steps.changelog.outputs.skipped == 'false'}}
-      #   run: |
-      #     IMAGE_TAG=ghcr.io/research-software-directory/rsd-saas/nginx
-      #     echo image_tag $IMAGE_TAG
-      #     IMAGE_TAG_RSD=ghcr.io/research-software-directory/rsd-saas/nginx:${{steps.changelog.outputs.tag}}
-      #     echo image_tag_rsd $IMAGE_TAG_RSD
-      #     docker build -t $IMAGE_TAG_RSD -t $IMAGE_TAG -f nginx/dockerfile ./nginx
-      #     echo "${{secrets.GITHUB_TOKEN}}" | docker login https://ghcr.io -u ${{github.actor}} --password-stdin
-      #     echo push nginx image with all tags
-      #     docker push ghcr.io/research-software-directory/rsd-saas/nginx --all-tags
+  nginx:
+    # it needs to be check on string value
+    if: needs.release_tag.outputs.skipped == 'false'
+    needs: release_tag
+    name: frontend image (build and push)
+    uses: ./.github/workflows/_ghcr.yml
+    with:
+      ghcr_user: ${{github.actor}}
+      base_image_name: ghcr.io/dmijatovic/rsd-saas/nginx
+      image_tag: ${{needs.release_tag.outputs.tag}}
+      dockerfile: nginx/dockerfile
+      docker_context: ./nginx
+    secrets:
+      token: ${{secrets.GITHUB_TOKEN}}
 
-      # - name: scrapers image (build and push)
-      #   if: ${{steps.changelog.outputs.skipped == 'false'}}
-      #   run: |
-      #     IMAGE_TAG=ghcr.io/research-software-directory/rsd-saas/scrapers
-      #     echo image_tag $IMAGE_TAG
-      #     IMAGE_TAG_RSD=ghcr.io/research-software-directory/rsd-saas/scrapers:${{steps.changelog.outputs.tag}}
-      #     echo image_tag_rsd $IMAGE_TAG_RSD
-      #     docker build -t $IMAGE_TAG_RSD -t $IMAGE_TAG -f scrapers/dockerfile ./scrapers
-      #     echo "${{secrets.GITHUB_TOKEN}}" | docker login https://ghcr.io -u ${{github.actor}} --password-stdin
-      #     echo push scrapers image with all tags
-      #     docker push ghcr.io/research-software-directory/rsd-saas/scrapers --all-tags
+  scrapers:
+    # it needs to be check on string value
+    if: needs.release_tag.outputs.skipped == 'false'
+    needs: release_tag
+    name: frontend image (build and push)
+    uses: ./.github/workflows/_ghcr.yml
+    with:
+      ghcr_user: ${{github.actor}}
+      base_image_name: ghcr.io/dmijatovic/rsd-saas/scrapers
+      image_tag: ${{needs.release_tag.outputs.tag}}
+      dockerfile: scrapers/dockerfile
+      docker_context: ./scrapers
+    secrets:
+      token: ${{secrets.GITHUB_TOKEN}}
+
   deployment_files:
     # it needs to be check on string value
     if: needs.release_tag.outputs.skipped == 'false'
