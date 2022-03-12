@@ -1,4 +1,4 @@
-name: 0. ghcr.io reusable module
+name: reusable ghcr.io module
 
 on:
   workflow_call:
@@ -42,7 +42,7 @@ jobs:
       image_build: ${{steps.build_image.outputs.image_build}}
       image_pushed: ${{steps.build_image.outputs.image_pushed}}
     steps:
-      - name: checkout repository
+      - name: checkout
         # https://github.com/actions/checkout
         uses: actions/checkout@v3
       - name: build

@@ -1,4 +1,4 @@
-name: 0. cff reusable module
+name: reusable cff module
 
 on:
   workflow_call:
@@ -21,13 +21,13 @@ jobs:
     name: commit cff from artifact
     runs-on: ubuntu-latest
     steps:
-      - name: checkout branch
+      - name: checkout ${{inputs.branch}}
         # https://github.com/actions/checkout
         uses: actions/checkout@v3
         with:
           ref: ${{inputs.branch}}
 
-      - name: get CITATION.cff
+      - name: download ${{inputs.artifact}}
         uses: actions/download-artifact@v3
         with:
           name: ${{inputs.artifact}}

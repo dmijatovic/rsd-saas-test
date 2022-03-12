@@ -1,4 +1,4 @@
-name: build and release (manual)
+name: build and release
 
 on:
   workflow_dispatch:
@@ -48,7 +48,7 @@ jobs:
     # it needs to be check on string value
     if: needs.release_tag.outputs.skipped == 'false'
     needs: release_tag
-    name: auth image (build and push)
+    name: auth image
     uses: ./.github/workflows/_ghcr.yml
     with:
       ghcr_user: ${{github.actor}}
@@ -63,7 +63,7 @@ jobs:
     # it needs to be check on string value
     if: needs.release_tag.outputs.skipped == 'false'
     needs: release_tag
-    name: database image (build and push)
+    name: database image
     uses: ./.github/workflows/_ghcr.yml
     with:
       ghcr_user: ${{github.actor}}
@@ -78,7 +78,7 @@ jobs:
     # it needs to be check on string value
     if: needs.release_tag.outputs.skipped == 'false'
     needs: release_tag
-    name: backend api image (build and push)
+    name: backend api image
     uses: ./.github/workflows/_ghcr.yml
     with:
       ghcr_user: ${{github.actor}}
@@ -93,7 +93,7 @@ jobs:
     # it needs to be check on string value
     if: needs.release_tag.outputs.skipped == 'false'
     needs: release_tag
-    name: frontend image (build and push)
+    name: frontend image
     uses: ./.github/workflows/_ghcr.yml
     with:
       ghcr_user: ${{github.actor}}
@@ -108,7 +108,7 @@ jobs:
     # it needs to be check on string value
     if: needs.release_tag.outputs.skipped == 'false'
     needs: release_tag
-    name: nginx image (build and push)
+    name: nginx image
     uses: ./.github/workflows/_ghcr.yml
     with:
       ghcr_user: ${{github.actor}}
@@ -123,7 +123,7 @@ jobs:
     # it needs to be check on string value
     if: needs.release_tag.outputs.skipped == 'false'
     needs: release_tag
-    name: scrapers image (build and push)
+    name: scrapers image
     uses: ./.github/workflows/_ghcr.yml
     with:
       ghcr_user: ${{github.actor}}
