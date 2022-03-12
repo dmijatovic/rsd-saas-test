@@ -11,7 +11,7 @@ jobs:
   #     branch: master
 
   log_version:
-    needs: get_version
+    # needs: get_version
     runs-on: ubuntu-latest
     steps:
       - name: log version
