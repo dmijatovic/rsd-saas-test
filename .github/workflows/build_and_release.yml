@@ -49,7 +49,7 @@ jobs:
     if: needs.release_tag.outputs.skipped == 'false'
     needs: release_tag
     name: auth image (build and push)
-    uses: ./.github/workflows/reuse_ghcr.yml
+    uses: ./.github/workflows/_ghcr.yml
     with:
       ghcr_user: ${{github.actor}}
       base_image_name: ghcr.io/dmijatovic/rsd-saas/auth
@@ -64,7 +64,7 @@ jobs:
     if: needs.release_tag.outputs.skipped == 'false'
     needs: release_tag
     name: database image (build and push)
-    uses: ./.github/workflows/reuse_ghcr.yml
+    uses: ./.github/workflows/_ghcr.yml
     with:
       ghcr_user: ${{github.actor}}
       base_image_name: ghcr.io/dmijatovic/rsd-saas/database
@@ -170,29 +170,17 @@ jobs:
           name: citation
           path: CITATION.cff
 
-      # - name: commit CITATION.cff
-      #   # https://github.com/stefanzweifel/git-auto-commit-action
-      #   uses: stefanzweifel/git-auto-commit-action@v4
-      #   with:
-      #     commit_message: "release: update citation file"
-      #     file_pattern: CITATION.cff
-
-  draft_release:
+  release_draft:
     # it needs to be check on string value
     if: needs.release_tag.outputs.skipped == 'false'
     needs: [release_tag, deployment_files]
-    name: create release
+    name: create release draft
     runs-on: ubuntu-latest
     steps:
       - name: get deployment.zip
         uses: actions/download-artifact@v3
         with:
           name: deployment
-
-      - name: get CITATION.cff
-        uses: actions/download-artifact@v3
-        with:
-          name: citation
 
       - name: validate info
         run: |
@@ -201,7 +189,6 @@ jobs:
           echo tag_name=${{needs.release_tag.outputs.tag}}
 
       - name: create release draft
-        if: ${{steps.changelog.outputs.skipped == 'false'}}
         # https://github.com/softprops/action-gh-release
         uses: softprops/action-gh-release@v1
         env:
@@ -215,9 +202,15 @@ jobs:
           prerelease: false
           files: deployment.zip
 
-      # - name: commit CITATION.cff
-      #   # https://github.com/stefanzweifel/git-auto-commit-action
-      #   uses: stefanzweifel/git-auto-commit-action@v4
-      #   with:
-      #     commit_message: "release: update citation file"
-      #     file_pattern: CITATION.cff
+  citation:
+   # it needs to be check on string value
+    if: needs.release_tag.outputs.skipped == 'false'
+    needs: [deployment_files, release_draft]
+    name: update cff file
+    uses: ./.github/workflows/_cff.yml
+    with:
+      artifact: citation
+      branch: master
+      commit_message: "chore(release): update citation file"
+
+
