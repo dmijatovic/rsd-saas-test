@@ -193,11 +193,11 @@ jobs:
         uses: softprops/action-gh-release@v1
         env:
           # The token is provided by Actions, you do not need to create your own token
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
         with:
-          tag_name: ${{ needs.release_tag.outputs.tag }}
-          name: ${{ steps.changelog.outputs.tag }}
-          body: ${{steps.changelog.outputs.clean_changelog}}
+          tag_name: ${{needs.release_tag.outputs.tag}}
+          name: ${{needs.release_tag.outputs.tag}}
+          body: ${{needs.release_tag.outputs.changelog}}
           draft: true
           prerelease: false
           files: deployment.zip
@@ -206,7 +206,7 @@ jobs:
    # it needs to be check on string value
     if: needs.release_tag.outputs.skipped == 'false'
     needs: [deployment_files, release_draft]
-    name: update cff file
+    name: citations
     uses: ./.github/workflows/_cff.yml
     with:
       artifact: citation
