@@ -1,4 +1,4 @@
-name: reusable cff module
+name: _cff reusable module
 
 on:
   workflow_call:
