@@ -42,7 +42,7 @@ jobs:
     uses: ./.github/workflows/reuse_ghcr.yml
     with:
       ghcr_user: ${{github.actor}}
-      base_image_name: ghcr.io/research-software-directory/rsd-saas/auth
+      base_image_name: ghcr.io/dmijatovic/rsd-saas/auth
       image_tag: ${{steps.changelog.outputs.tag}}
       dockerfile: authentication/dockerfile
       docker_context: ./authentication
@@ -56,7 +56,7 @@ jobs:
     uses: ./.github/workflows/reuse_ghcr.yml
     with:
       ghcr_user: ${{github.actor}}
-      base_image_name: ghcr.io/research-software-directory/rsd-saas/database
+      base_image_name: ghcr.io/dmijatovic/rsd-saas/database
       image_tag: ${{steps.changelog.outputs.tag}}
       dockerfile: database/dockerfile
       docker_context: ./database
