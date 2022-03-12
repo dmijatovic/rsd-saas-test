@@ -3,15 +3,16 @@ name: release
 on:
   workflow_dispatch:
     inputs:
-      replease_type:
-        description: 'Release type'
+      draft:
+        description: 'Release draft'
         required: true
-        default: 'draft'
-        type: choice
-        options:
-        - draft
-        - prerelease
-        - release
+        default: true
+        type: boolean
+      prerelease:
+        description: 'Pre release'
+        required: true
+        default: false
+        type: boolean
 
 jobs:
   release_tag:
@@ -104,11 +105,11 @@ jobs:
           name: citation
           path: CITATION.cff
 
-  release_draft:
+  create_release:
     # it needs to be check on string value
     if: needs.release_tag.outputs.skipped == 'false'
     needs: [release_tag, deployment_files]
-    name: create release draft
+    name: create release
     runs-on: ubuntu-latest
     steps:
       - name: get deployment.zip
@@ -132,6 +133,6 @@ jobs:
           tag_name: ${{needs.release_tag.outputs.tag}}
           name: ${{needs.release_tag.outputs.tag}}
           body: ${{needs.release_tag.outputs.changelog}}
-          draft: ${{inputs.replease_type == 'draft'}}
-          prerelease: ${{inputs.replease_type == 'prerelease'}}
+          draft: ${{inputs.draft}}
+          prerelease: ${{inputs.prerelease}}
           files: deployment.zip
