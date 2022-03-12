@@ -5,18 +5,41 @@ on:
     types: [published]
 
 jobs:
-  # get_version:
-  #   uses: ./.github/workflows/_version.yml
-  #   with:
-  #     branch: master
-
   log_version:
     # needs: get_version
     runs-on: ubuntu-latest
     steps:
       - name: log version
         run: |
-          # echo version=${{needs.get_version.outputs.version}}
           echo tag_name=${{github.event.release.tag_name}}
+  auth:
+    # only if have tag
+    if: github.event.release.tag_name != ''
+    needs: log_version
+    name: auth
+    uses: ./.github/workflows/_ghcr.yml
+    with:
+      ghcr_user: ${{github.actor}}
+      base_image_name: ghcr.io/dmijatovic/rsd-saas/auth
+      image_tag: ${{github.event.release.tag_name}}
+      dockerfile: authentication/dockerfile
+      docker_context: ./authentication
+    secrets:
+      token: ${{secrets.GITHUB_TOKEN}}
+
+  database:
+    # it needs to be check on string value
+    if: github.event.release.tag_name != ''
+    needs: log_version
+    name: database
+    uses: ./.github/workflows/_ghcr.yml
+    with:
+      ghcr_user: ${{github.actor}}
+      base_image_name: ghcr.io/dmijatovic/rsd-saas/database
+      image_tag: ${{github.event.release.tag_name}}
+      dockerfile: database/dockerfile
+      docker_context: ./database
+    secrets:
+      token: ${{secrets.GITHUB_TOKEN}}
 
 
