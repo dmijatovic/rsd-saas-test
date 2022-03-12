@@ -163,19 +163,19 @@ jobs:
           name: deployment
           path: deployment.zip
 
-      # - name: Upload CITATION.cff
-      #   # https://github.com/actions/upload-artifact
-      #   uses: actions/upload-artifact@v3
-      #   with:
-      #     name: citation
-      #     path: CITATION.cff
-
-      - name: commit CITATION.cff
-        # https://github.com/stefanzweifel/git-auto-commit-action
-        uses: stefanzweifel/git-auto-commit-action@v4
+      - name: Upload CITATION.cff
+        # https://github.com/actions/upload-artifact
+        uses: actions/upload-artifact@v3
         with:
-          commit_message: "release: update citation file"
-          file_pattern: CITATION.cff
+          name: citation
+          path: CITATION.cff
+
+      # - name: commit CITATION.cff
+      #   # https://github.com/stefanzweifel/git-auto-commit-action
+      #   uses: stefanzweifel/git-auto-commit-action@v4
+      #   with:
+      #     commit_message: "release: update citation file"
+      #     file_pattern: CITATION.cff
 
   draft_release:
     # it needs to be check on string value
@@ -188,6 +188,11 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: deployment
+
+      - name: get CITATION.cff
+        uses: actions/download-artifact@v3
+        with:
+          name: citation
 
       - name: validate info
         run: |
@@ -209,3 +214,10 @@ jobs:
           draft: true
           prerelease: false
           files: deployment.zip
+
+      # - name: commit CITATION.cff
+      #   # https://github.com/stefanzweifel/git-auto-commit-action
+      #   uses: stefanzweifel/git-auto-commit-action@v4
+      #   with:
+      #     commit_message: "release: update citation file"
+      #     file_pattern: CITATION.cff
