@@ -37,7 +37,7 @@ jobs:
 
   log_release_tag:
     needs: release_tag
-    name: log release_tag output
+    name: log version output
     runs-on: ubuntu-latest
     steps:
       - name: info
@@ -128,12 +128,9 @@ jobs:
     name: create deployment.zip
     runs-on: ubuntu-latest
     steps:
-      - name: checkout main branch
+      - name: checkout branch
         # https://github.com/actions/checkout
         uses: actions/checkout@v3
-        with:
-          # checkout whole history of main branch
-          ref: main
 
       - name: update docker-compose.yml
         run: |
