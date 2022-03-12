@@ -108,7 +108,7 @@ jobs:
     # it needs to be check on string value
     if: needs.release_tag.outputs.skipped == 'false'
     needs: release_tag
-    name: frontend image (build and push)
+    name: nginx image (build and push)
     uses: ./.github/workflows/_ghcr.yml
     with:
       ghcr_user: ${{github.actor}}
@@ -123,7 +123,7 @@ jobs:
     # it needs to be check on string value
     if: needs.release_tag.outputs.skipped == 'false'
     needs: release_tag
-    name: frontend image (build and push)
+    name: scrapers image (build and push)
     uses: ./.github/workflows/_ghcr.yml
     with:
       ghcr_user: ${{github.actor}}
@@ -137,7 +137,7 @@ jobs:
   deployment_files:
     # it needs to be check on string value
     if: needs.release_tag.outputs.skipped == 'false'
-    needs: [release_tag,auth,database]
+    needs: [release_tag,auth,database,backend,frontend,nginx,scrapers]
     name: create deployment.zip
     runs-on: ubuntu-latest
     steps:

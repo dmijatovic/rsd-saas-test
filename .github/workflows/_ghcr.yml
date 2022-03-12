@@ -1,4 +1,4 @@
-name: 1. ghcr.io reusable module
+name: 0. ghcr.io reusable module
 
 on:
   workflow_call:
