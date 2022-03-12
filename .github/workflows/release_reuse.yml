@@ -148,7 +148,6 @@ jobs:
           cat CITATION.cff
 
       - name: zip deployment files
-        if: ${{steps.changelog.outputs.skipped == 'false'}}
         run: |
           zip deployment.zip \
             ./deployment/docker-compose.yml \
@@ -163,6 +162,13 @@ jobs:
         with:
           name: deployment
           path: deployment.zip
+
+      # - name: Upload CITATION.cff
+      #   # https://github.com/actions/upload-artifact
+      #   uses: actions/upload-artifact@v3
+      #   with:
+      #     name: citation
+      #     path: CITATION.cff
 
       - name: commit CITATION.cff
         # https://github.com/stefanzweifel/git-auto-commit-action
@@ -183,13 +189,11 @@ jobs:
         with:
           name: deployment
 
-      - name: validate all info
+      - name: validate info
         run: |
           echo show files
           ls -lha
           echo tag_name=${{needs.release_tag.outputs.tag}}
-          echo changelog
-          echo ${{needs.release_tag.outputs.changelog}}
 
       - name: create release draft
         if: ${{steps.changelog.outputs.skipped == 'false'}}
