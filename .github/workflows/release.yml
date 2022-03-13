@@ -9,7 +9,7 @@ on:
         default: true
         type: boolean
       prerelease:
-        description: 'Pre release'
+        description: 'Pre-release'
         required: true
         default: false
         type: boolean
