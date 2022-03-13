@@ -55,6 +55,8 @@ jobs:
         run: |
           echo skipped=${{needs.release_tag.outputs.skipped}}
           echo tag=${{needs.release_tag.outputs.tag}}
+          echo draft=${{inputs.draft}}
+          echo prerelease=${{inputs.prerelease}}
 
   deployment_files:
     # it needs to be check on string value
@@ -98,13 +100,6 @@ jobs:
           name: deployment
           path: deployment.zip
 
-      - name: Upload CITATION.cff
-        # https://github.com/actions/upload-artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: citation
-          path: CITATION.cff
-
   create_release:
     # it needs to be check on string value
     if: needs.release_tag.outputs.skipped == 'false'
@@ -123,7 +118,7 @@ jobs:
           ls -lha
           echo tag_name=${{needs.release_tag.outputs.tag}}
 
-      - name: create release draft
+      - name: create release
         # https://github.com/softprops/action-gh-release
         uses: softprops/action-gh-release@v1
         env:
