@@ -55,8 +55,8 @@ jobs:
         run: |
           echo skipped=${{needs.release_tag.outputs.skipped}}
           echo tag=${{needs.release_tag.outputs.tag}}
-          echo draft=${{inputs.draft}}
-          echo prerelease=${{inputs.prerelease}}
+          echo draft=${{github.event.inputs.draft}}
+          echo prerelease=${{github.event.inputs.prerelease}}
 
   deployment_files:
     # it needs to be check on string value
@@ -128,6 +128,6 @@ jobs:
           tag_name: ${{needs.release_tag.outputs.tag}}
           name: ${{needs.release_tag.outputs.tag}}
           body: ${{needs.release_tag.outputs.changelog}}
-          draft: ${{inputs.draft}}
-          prerelease: ${{inputs.prerelease}}
+          draft: ${{github.event.inputs.draft}}
+          prerelease: ${{github.event.inputs.prerelease}}
           files: deployment.zip
