@@ -2,6 +2,21 @@ name: reusable cff update module
 
 on:
   workflow_dispatch:
+    # inputs need to be defined 2 times
+    inputs:
+      version_tag:
+        required: true
+        description: Version tag to use
+        type: string
+      branch:
+        required: true
+        description: Repo branch to use to commit
+        type: string
+      commit_message:
+        required: true
+        description: Commit message to use
+        type: string
+
   workflow_call:
     inputs:
       version_tag:
