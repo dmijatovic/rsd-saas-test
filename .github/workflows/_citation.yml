@@ -1,6 +1,7 @@
 name: reusable cff update module
 
 on:
+  workflow_dispatch:
   workflow_call:
     inputs:
       version_tag:
