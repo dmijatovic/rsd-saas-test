@@ -18,7 +18,7 @@ on:
 
 jobs:
   commit_cff:
-    name: commit cff from artifact
+    name: commit cff
     runs-on: ubuntu-latest
     steps:
       - name: checkout ${{inputs.branch}}
