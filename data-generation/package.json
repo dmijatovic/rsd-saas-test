@@ -1,0 +1,17 @@
+{
+  "dependencies": {
+    "@faker-js/faker": "7.6.0",
+    "jsonwebtoken": "9.0.0",
+    "wait-on": "7.0.1"
+  },
+  "name": "data-generator",
+  "version": "1.0.0",
+  "main": "main.js",
+  "scripts": {
+    "start": "node main.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "type": "module"
+}

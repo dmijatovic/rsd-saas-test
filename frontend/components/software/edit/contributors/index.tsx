@@ -1,38 +1,46 @@
-import {useContext,useEffect,useState} from 'react'
+// SPDX-FileCopyrightText: 2022 - 2023 Dusan Mijatovic (dv4all)
+// SPDX-FileCopyrightText: 2022 - 2023 Helmholtz Centre Potsdam - GFZ German Research Centre for Geosciences
+// SPDX-FileCopyrightText: 2022 - 2023 dv4all
+// SPDX-FileCopyrightText: 2022 Matthias Rüster (GFZ) <matthias.ruester@gfz-potsdam.de>
+// SPDX-FileCopyrightText: 2023 Christian Meeßen (GFZ) <christian.meessen@gfz-potsdam.de>
+// SPDX-FileCopyrightText: 2023 Dusan Mijatovic (dv4all) (dv4all)
+//
+// SPDX-License-Identifier: Apache-2.0
 
-import {app} from '../../../../config/app'
-import useSnackbar from '../../../snackbar/useSnackbar'
-import ContentLoader from '../../../layout/ContentLoader'
-import ConfirmDeleteModal from '../../../layout/ConfirmDeleteModal'
-import {Contributor, ContributorProps} from '../../../../types/Contributor'
+import {useState} from 'react'
+
+import {useSession} from '~/auth'
+import useSnackbar from '~/components/snackbar/useSnackbar'
+import ContentLoader from '~/components/layout/ContentLoader'
+import ConfirmDeleteModal from '~/components/layout/ConfirmDeleteModal'
+import {Contributor, SaveContributor} from '~/types/Contributor'
 import {
-  addContributorToDb, deleteContributorsById,
-  getAvatarUrl, getContributorsForSoftware,
-  prepareContributorData, updateContributorInDb
-} from '../../../../utils/editContributors'
-import useOnUnsaveChange from '../../../../utils/useOnUnsavedChange'
-import {getDisplayName} from '../../../../utils/getDisplayName'
-import {sortOnStrProp} from '../../../../utils/sortFn'
-import {getPropsFromObject} from '../../../../utils/getPropsFromObject'
+  deleteContributorsById,
+  patchContributorPositions,
+} from '~/utils/editContributors'
+import {getDisplayName} from '~/utils/getDisplayName'
 import EditContributorModal from './EditContributorModal'
 import FindContributor, {Name} from './FindContributor'
-import SoftwareContributorsList from './SoftwareContributorsList'
-import EditSoftwareSection from '../EditSoftwareSection'
-import editSoftwareContext from '../editSoftwareContext'
-import EditSectionTitle from '../EditSectionTitle'
+import EditSoftwareSection from '../../../layout/EditSection'
+import EditSectionTitle from '../../../layout/EditSectionTitle'
 import {contributorInformation as config} from '../editSoftwareConfig'
-import {ModalProps,ModalStates} from '../editSoftwareTypes'
+import {ModalProps, ModalStates} from '../editSoftwareTypes'
+import GetContributorsFromDoi from './GetContributorsFromDoi'
+import useSoftwareContext from '../useSoftwareContext'
+import useSoftwareContributors from './useSoftwareContributors'
+import SortableContributorsList from './SortableContributorsList'
+import {deleteImage} from '~/utils/editImage'
+import ContributorPrivacyHint from '~/components/layout/ContributorPrivacyHint'
 
 type EditContributorModal = ModalProps & {
   contributor?: Contributor
 }
 
-export default function SoftwareContributors({token}: {token: string }) {
-  const {showErrorMessage,showSuccessMessage} = useSnackbar()
-  const {pageState, dispatchPageState} = useContext(editSoftwareContext)
-  const {software} = pageState
-  const [loading, setLoading] = useState(true)
-  const [contributors, setContributors] = useState<Contributor[]>([])
+export default function SoftwareContributors() {
+  const {token} = useSession()
+  const {showErrorMessage} = useSnackbar()
+  const {software} = useSoftwareContext()
+  const {loading,contributors,setContributors} = useSoftwareContributors()
   const [modal, setModal] = useState<ModalStates<EditContributorModal>>({
     edit: {
       open: false
@@ -41,48 +49,38 @@ export default function SoftwareContributors({token}: {token: string }) {
       open: false
     }
   })
-  // we use pageState to enable/disable Save button in the header
-  // extract from (shared) pageState
-  const {isDirty,isValid} = pageState
-  // watch for unsaved changes
-  useOnUnsaveChange({
-    isDirty,
-    isValid,
-    warning: app.unsavedChangesMessage
-  })
 
-  useEffect(() => {
-    let abort = false
-    const getContributors = async (software:string,token:string) => {
-      const resp = await getContributorsForSoftware({
-        software,
-        token,
-        frontend:true
-      })
-      if (abort) return
-      // update state
-      setContributors(resp ?? [])
-      setLoading(false)
-    }
-    if (software?.id && token) {
-      getContributors(software.id,token)
-    }
-    return () => { abort = true }
-  },[software?.id,token])
+  // console.group('SoftwareContributors')
+  // console.log('software...', software)
+  // console.log('loading...', loading)
+  // console.log('contributors...', contributors)
+  // console.groupEnd()
 
   // if loading show loader
   if (loading) return (
     <ContentLoader />
   )
 
+  function hideModals() {
+    // hide modals
+    setModal({
+      edit: {
+        open:false
+      },
+      delete: {
+        open:false
+      }
+    })
+  }
+
   function updateContributorList({data, pos}: { data: Contributor, pos?: number }) {
-    if (typeof pos == 'number') {
+    if (typeof pos === 'number') {
       // REPLACE existing item and sort
-      const list = [
-        ...contributors.slice(0, pos),
-        data,
-        ...contributors.slice(pos+1)
-      ].sort((a,b)=>sortOnStrProp(a,b,'given_names'))
+      const list = contributors.map((item, i) => {
+        // replace item at pos
+        if (i === pos) return data
+        return item
+      })
       // pass new list with addition contributor
       setContributors(list)
     } else {
@@ -90,33 +88,19 @@ export default function SoftwareContributors({token}: {token: string }) {
       const list = [
         ...contributors,
         data
-      ].sort((a,b)=>sortOnStrProp(a,b,'given_names'))
+      ]
       setContributors(list)
     }
   }
 
-  function onCreateNewContributor(name:Name) {
-    const newContributor: Contributor = getPropsFromObject(name, ContributorProps)
-    // set defaults
-    newContributor.software = software?.id ?? ''
-    newContributor.is_contact_person = false
-    loadContributorIntoModal(newContributor)
-  }
-
-  async function onAddContributor(item: Contributor) {
-    // update software id if missing
-    if (item.software === '' &&
-      software?.id &&
-      software?.id !== '') {
-      item.software = software?.id
-    }
-    // extract props into new object
-    const contributor: Contributor = getPropsFromObject(item, ContributorProps)
-    loadContributorIntoModal(contributor)
-  }
-
   function loadContributorIntoModal(contributor: Contributor,pos?:number) {
-    if (contributor) {
+    if (contributor && software?.id) {
+      // load software.id
+      contributor.software = software?.id
+      if (typeof pos==='undefined') {
+        // this is new member and we need to add position
+        contributor.position = contributors.length + 1
+      }
       // show modal and pass data
       setModal({
         edit: {
@@ -125,7 +109,7 @@ export default function SoftwareContributors({token}: {token: string }) {
           contributor
         },
         delete: {
-          open:false
+          open: false
         }
       })
     }
@@ -137,42 +121,10 @@ export default function SoftwareContributors({token}: {token: string }) {
     loadContributorIntoModal(contributor,pos)
   }
 
-  async function onSubmitContributor({data, pos}:{data:Contributor,pos?: number}) {
-    setModal({
-      edit: {
-        open:false
-      },
-      delete: {
-        open:false
-      }
-    })
-    // if id present we update
-    if (data?.id) {
-      const resp = await updateContributorInDb({data, token})
-      if (resp.status === 200) {
-        updateContributorList({data:resp.message,pos})
-        // show notification
-        showSuccessMessage(`Updated ${getDisplayName(data)}`)
-      } else {
-        showErrorMessage(`Failed to update ${getDisplayName(data)}. Error: ${resp.message}`)
-      }
-    } else {
-      // this is completely new contributor we need to add to DB
-      const contributor = prepareContributorData(data)
-      const resp = await addContributorToDb({contributor, token})
-      if (resp.status === 201) {
-        // id of created record is provided in returned in message
-        contributor.id = resp.message
-        // remove avatar data
-        contributor.avatar_data = null
-        // construct url
-        contributor.avatar_url = getAvatarUrl(contributor)
-        // update contributors list
-        updateContributorList({data:contributor})
-      } else {
-        showErrorMessage(`Failed to add ${getDisplayName(data)}. Error: ${resp.message}`)
-      }
-    }
+  function onSubmitContributor({contributor, pos}:{contributor:SaveContributor,pos?: number}) {
+    // update contributors list
+    updateContributorList({data: contributor,pos})
+    hideModals()
   }
 
   function onDeleteContributor(pos:number) {
@@ -191,14 +143,7 @@ export default function SoftwareContributors({token}: {token: string }) {
 
   async function deleteContributor(pos?: number) {
     // hide modals
-    setModal({
-      edit: {
-        open:false
-      },
-      delete: {
-        open:false
-      }
-    })
+    hideModals()
     // abort if not specified
     if (typeof pos == 'number') {
       const contributor = contributors[pos]
@@ -209,10 +154,18 @@ export default function SoftwareContributors({token}: {token: string }) {
         const resp = await deleteContributorsById({ids, token})
         if (resp.status === 200) {
           // show notification
-          showSuccessMessage(`Removed ${getDisplayName(contributor)} from ${pageState.software.brand_name}`)
+          // showSuccessMessage(`Removed ${getDisplayName(contributor)} from ${pageState.software.brand_name}`)
           removeFromContributorList(pos)
         } else {
           showErrorMessage(`Failed to remove ${getDisplayName(contributor)}. Error: ${resp.message}`)
+        }
+        // try to remove member avatar
+        // without waiting for result
+        if (contributor.avatar_id) {
+          const del = await deleteImage({
+            id: contributor.avatar_id,
+            token
+          })
         }
       } else {
         // new contributor
@@ -226,8 +179,28 @@ export default function SoftwareContributors({token}: {token: string }) {
     const list = [
       ...contributors.slice(0, pos),
       ...contributors.slice(pos+1)
-    ]
-    setContributors(list)
+    ].map((item, pos) => {
+      // renumber positions
+      item.position = pos + 1
+      return item
+    })
+    sortedContributors(list)
+  }
+
+  async function sortedContributors(contributors: Contributor[]) {
+    if (contributors.length > 0) {
+      const resp = await patchContributorPositions({
+        contributors,
+        token
+      })
+      if (resp.status === 200) {
+        setContributors(contributors)
+      } else {
+        showErrorMessage(`Failed to update contributor positions. ${resp.message}`)
+      }
+    } else {
+      setContributors(contributors)
+    }
   }
 
   return (
@@ -238,10 +211,11 @@ export default function SoftwareContributors({token}: {token: string }) {
             <span>Contributors</span>
             <span>{contributors?.length}</span>
           </h2>
-          <SoftwareContributorsList
+          <SortableContributorsList
             contributors={contributors}
             onEdit={onEditContributor}
             onDelete={onDeleteContributor}
+            onSorted={sortedContributors}
           />
         </section>
         <section className="py-4">
@@ -250,37 +224,55 @@ export default function SoftwareContributors({token}: {token: string }) {
             subtitle={config.findContributor.subtitle}
           />
           <FindContributor
-            onAdd={onAddContributor}
-            onCreate={onCreateNewContributor}
+            software={software?.id ?? ''}
+            onAdd={loadContributorIntoModal}
           />
+          <ContributorPrivacyHint />
+          {
+            software?.concept_doi &&
+            <div className="pt-8 pb-0">
+              <EditSectionTitle
+                title={config.importContributors.title}
+                subtitle={config.importContributors.subtitle}
+              />
+              <GetContributorsFromDoi
+                contributors={contributors}
+                onSetContributors={setContributors}
+              />
+            </div>
+          }
         </section>
       </EditSoftwareSection>
-      <EditContributorModal
-        open={modal.edit.open}
-        pos={modal.edit.pos}
-        contributor={modal.edit.contributor}
-        onCancel={() => {
-          setModal({
-            edit:{open:false},
-            delete:{open:false}
-          })
-        }}
-        onSubmit={onSubmitContributor}
-      />
-      <ConfirmDeleteModal
-        open={modal.delete.open}
-        title="Remove contributor"
-        body={
-          <p>Are you sure you want to remove <strong>{modal.delete.displayName ?? 'No name'}</strong>?</p>
-        }
-        onCancel={() => {
-          setModal({
-            edit:{open:false},
-            delete:{open:false}
-          })
-        }}
-        onDelete={()=>deleteContributor(modal.delete.pos)}
-      />
+      {modal.edit.open &&
+        <EditContributorModal
+          open={modal.edit.open}
+          pos={modal.edit.pos}
+          contributor={modal.edit.contributor}
+          onCancel={() => {
+            setModal({
+              edit:{open:false},
+              delete:{open:false}
+            })
+          }}
+          onSubmit={onSubmitContributor}
+        />
+      }
+      {modal.delete.open &&
+        <ConfirmDeleteModal
+          open={modal.delete.open}
+          title="Remove contributor"
+          body={
+            <p>Are you sure you want to remove <strong>{modal.delete.displayName ?? 'No name'}</strong>?</p>
+          }
+          onCancel={() => {
+            setModal({
+              edit:{open:false},
+              delete:{open:false}
+            })
+          }}
+          onDelete={()=>deleteContributor(modal.delete.pos)}
+        />
+      }
     </>
   )
 }

@@ -1,38 +1,74 @@
+// SPDX-FileCopyrightText: 2021 - 2023 Dusan Mijatovic (dv4all)
+// SPDX-FileCopyrightText: 2021 - 2023 dv4all
+// SPDX-FileCopyrightText: 2023 Dusan Mijatovic (dv4all) (dv4all)
+//
+// SPDX-License-Identifier: Apache-2.0
+
 import {MouseEvent, ChangeEvent} from 'react'
 import Head from 'next/head'
 import {useRouter} from 'next/router'
+import {GetServerSidePropsContext} from 'next/types'
 import TablePagination from '@mui/material/TablePagination'
+import Pagination from '@mui/material/Pagination'
 
 import {app} from '../../config/app'
 import DefaultLayout from '../../components/layout/DefaultLayout'
 import PageTitle from '../../components/layout/PageTitle'
-import Searchbox from '../../components/software/Searchbox'
-import FilterTechnologies from '../../components/software/FilterTechnologies'
-import SortSelection from '../../components/software/SortSelection'
+import Searchbox from '../../components/form/Searchbox'
 import SoftwareGrid from '../../components/software/SoftwareGrid'
-import {SoftwareItem} from '../../types/SoftwareTypes'
+import {SoftwareListItem} from '../../types/SoftwareTypes'
 import {rowsPerPageOptions} from '../../config/pagination'
-import {getSoftwareList, getTagsWithCount, TagItem} from '../../utils/getSoftware'
+import {getSoftwareList} from '../../utils/getSoftware'
 import {ssrSoftwareParams} from '../../utils/extractQueryParam'
-import {softwareUrl,ssrSoftwareUrl} from '../../utils/postgrestUrl'
-import logger from '../../utils/logger'
+import {softwareListUrl,ssrSoftwareUrl} from '../../utils/postgrestUrl'
+import SoftwareFilter from '~/components/software/filter'
+import {useAdvicedDimensions} from '~/components/layout/FlexibleGridSection'
+import PageMeta from '~/components/seo/PageMeta'
+import CanonicalUrl from '~/components/seo/CanonicalUrl'
 
-export default function SoftwareIndexPage({count,page,rows,tags,software=[]}:
-  {count:number,page:number,rows:number,tags:TagItem[],software:SoftwareItem[]
-}){
+type SoftwareIndexPageProps = {
+  count: number,
+  page: number,
+  rows: number,
+  keywords?: string[],
+  prog_lang?: string[],
+  software: SoftwareListItem[],
+  search?: string,
+}
+
+const pageTitle = `Software | ${app.title}`
+const pageDesc = 'The list of research software registerd in the Research Software Directory.'
+
+export default function SoftwareIndexPage(
+  {software=[], count, page, rows, keywords, prog_lang, search}: SoftwareIndexPageProps
+) {
   // use next router (hook is only for browser)
   const router = useRouter()
+  const {itemHeight, minWidth, maxWidth} = useAdvicedDimensions('software')
+
+  // console.group('SoftwareIndexPage')
+  // console.log('query...', router.query)
+  // console.groupEnd()
 
   // next/previous page button
-  function handlePageChange(
+  function handleTablePageChange(
     event: MouseEvent<HTMLButtonElement> | null,
     newPage: number,
-  ){
+  ) {
     const url = ssrSoftwareUrl({
-      query: router.query,
-      page: newPage
+      // take existing params from url (query)
+      ...ssrSoftwareParams(router.query),
+      page: newPage,
     })
     router.push(url)
+  }
+
+  function handlePaginationChange(
+    event: ChangeEvent<unknown>,
+    newPage: number,
+  ) {
+    // Pagination component starts counting from 1, but we need to start from 0
+    handleTablePageChange(event as any, newPage - 1)
   }
 
   // change number of cards per page
@@ -40,7 +76,8 @@ export default function SoftwareIndexPage({count,page,rows,tags,software=[]}:
     event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ){
     const url = ssrSoftwareUrl({
-      query: router.query,
+      // take existing params from url (query)
+      ...ssrSoftwareParams(router.query),
       // reset to first page
       page: 0,
       rows: parseInt(event.target.value),
@@ -48,55 +85,56 @@ export default function SoftwareIndexPage({count,page,rows,tags,software=[]}:
     router.push(url)
   }
 
-  function handleSearch(searchFor:string){
+  function handleSearch(searchFor: string) {
+    // debugger
     const url = ssrSoftwareUrl({
-      query: router.query,
+      // take existing params from url (query)
+      ...ssrSoftwareParams(router.query),
       search: searchFor,
       // start from first page
-      page: 0
+      page: 0,
     })
     router.push(url)
   }
 
-  function handleFilters(filters:string[]){
-    let filterStr
-    if (filters.length > 0){
-      filterStr = JSON.stringify(filters)
-    }else{
-      filterStr = null
-    }
+  function handleFilters({keywords,prog_lang}:{keywords:string[],prog_lang:string[]}){
     const url = ssrSoftwareUrl({
-      query: router.query,
-      // stringified filters
-      filter: filterStr,
+      // take existing params from url (query)
+      ...ssrSoftwareParams(router.query),
+      keywords,
+      prog_lang,
       // start from first page
-      page: 0
+      page: 0,
     })
     router.push(url)
   }
 
   // TODO! handle sort options
-  function handleSort(sortOn:string){
-    logger(`software.index.handleSort: TODO! Sort on...${sortOn}`,'warn')
-  }
+  // function handleSort(sortOn:string){
+  //   logger(`software.index.handleSort: TODO! Sort on...${sortOn}`,'warn')
+  // }
 
   return (
     <DefaultLayout>
-      <Head>
-        <title>Software | {app.title}</title>
-      </Head>
+      {/* Page Head meta tags */}
+      <PageMeta
+        title={pageTitle}
+        description={pageDesc}
+      />
+      {/* canonical url meta tag */}
+      <CanonicalUrl/>
       <PageTitle title="Software">
-        <div className="flex flex-wrap justify-end">
+        <div className="md:flex flex-wrap justify-end">
           <div className="flex items-center">
-            <Searchbox onSearch={handleSearch}></Searchbox>
-            <FilterTechnologies
-              items={tags}
-              onSelect={handleFilters}
+            <SoftwareFilter
+              keywords={keywords ?? []}
+              prog_lang={prog_lang ?? []}
+              onApply={handleFilters}
             />
-            <SortSelection
-              items={['Last updated', 'Most updates', 'Most mentions']}
-              defaultValue='Last updated'
-              onSort={handleSort}
+            <Searchbox
+              placeholder={keywords?.length ? 'Find within selection' : 'Find software'}
+              onSearch={handleSearch}
+              defaultValue={search}
             />
           </div>
           <TablePagination
@@ -104,65 +142,70 @@ export default function SoftwareIndexPage({count,page,rows,tags,software=[]}:
             count={count}
             page={page}
             labelRowsPerPage="Per page"
-            onPageChange={handlePageChange}
+            onPageChange={handleTablePageChange}
             rowsPerPage={rows}
             rowsPerPageOptions={rowsPerPageOptions}
             onRowsPerPageChange={handleItemsPerPage}
           />
         </div>
       </PageTitle>
-      <SoftwareGrid software={software} />
+
+      <SoftwareGrid
+        className='gap-[0.125rem] p-[0.125rem] pt-4 pb-12'
+        grid={{
+          height: itemHeight,
+          minWidth,
+          maxWidth
+        }}
+        software={software}
+      />
+
+      <div className="flex flex-wrap justify-center mb-5">
+        <Pagination
+          count={Math.ceil(count/rows)}
+          page={page + 1}
+          onChange={handlePaginationChange}
+          size="large"
+          shape="rounded"
+        />
+      </div>
     </DefaultLayout>
   )
 }
 
-
 // fetching data server side
 // see documentation https://nextjs.org/docs/basic-features/data-fetching#getserversideprops-server-side-rendering
-export async function getServerSideProps(context:any) {
+export async function getServerSideProps(context:GetServerSidePropsContext) {
   // extract params from page-query
-  const {search,filterStr,rows,page} = ssrSoftwareParams(context)
-
+  const {search, keywords, prog_lang, rows, page} = ssrSoftwareParams(context.query)
   // construct postgREST api url with query params
-  const url = softwareUrl({
+  const url = softwareListUrl({
     baseUrl: process.env.POSTGREST_URL || 'http://localhost:3500',
     search,
-    columns:['id','slug','brand_name','short_statement','is_featured','updated_at'],
-    filters: JSON.parse(filterStr),
-    order:'is_featured.desc,updated_at.desc',
+    keywords,
+    prog_lang,
+    order: 'mention_cnt.desc.nullslast,contributor_cnt.desc.nullslast,updated_at.desc.nullslast',
     limit: rows,
     offset: rows * page,
   })
 
-  // get software list
-  const software = await getSoftwareList(url)
+  // console.log('software...url...', url)
 
-  // get tags
-  const tags = await getTagsWithCount()
-  // enrich tags with status
-  if (filterStr){
-    const filters = JSON.parse(filterStr)
-    tags?.forEach(item=>{
-      if (filterStr.includes(item.tag)){
-        item.active = true
-      }else{
-        item.active = false
-      }
-    })
-  }else{
-    // all items are inactive (not pre-selected)
-    tags?.forEach(item=>item.active=false)
-  }
+  // get software list, we do not pass the token
+  // when token is passed it will return not published items too
+  const software = await getSoftwareList({url})
 
   // will be passed as props to page
   // see params of SoftwareIndexPage function
   return {
     props: {
+      search,
+      keywords,
+      prog_lang,
       count: software.count,
       page,
       rows,
       software: software.data,
-      tags
     },
   }
 }

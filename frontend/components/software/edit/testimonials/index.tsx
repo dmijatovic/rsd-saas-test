@@ -1,38 +1,41 @@
-import {useContext, useEffect, useState} from 'react'
+// SPDX-FileCopyrightText: 2022 Dusan Mijatovic (dv4all)
+// SPDX-FileCopyrightText: 2022 Dusan Mijatovic (dv4all) (dv4all)
+// SPDX-FileCopyrightText: 2022 dv4all
+//
+// SPDX-License-Identifier: Apache-2.0
+
+import {useState} from 'react'
 import AddIcon from '@mui/icons-material/Add'
 import Button from '@mui/material/Button'
 
-import {useForm} from 'react-hook-form'
-import {DropResult} from 'react-beautiful-dnd'
-
+import {useSession} from '~/auth'
 import useSnackbar from '../../../snackbar/useSnackbar'
-import {Testimonial} from '../../../../types/Testimonial'
+import {NewTestimonial, Testimonial} from '../../../../types/Testimonial'
 import {
-  postTestimonial, getTestimonialsForSoftware,
-  patchTestimonial, deleteTestimonialById, patchTestimonialPositions
+  postTestimonial, patchTestimonial,
+  deleteTestimonialById, patchTestimonialPositions
 } from '../../../../utils/editTestimonial'
-import {reorderList} from '../../../../utils/dndHelpers'
 import {sortOnNumProp} from '../../../../utils/sortFn'
 import ContentLoader from '../../../layout/ContentLoader'
 import ConfirmDeleteModal from '../../../layout/ConfirmDeleteModal'
 
 import EditTestimonialModal from './EditTestimonialModal'
-import EditSoftwareSection from '../EditSoftwareSection'
-import editSoftwareContext, {EditSoftwareActionType} from '../editSoftwareContext'
-import EditSectionTitle from '../EditSectionTitle'
-import SoftwareTestimonialsDndList from './SoftwareTestimonialsDndList'
+import EditSoftwareSection from '../../../layout/EditSection'
+import EditSectionTitle from '../../../layout/EditSectionTitle'
 import {ModalProps,ModalStates} from '../editSoftwareTypes'
 
+import SortableTestimonialList from './SortableTestimonialList'
+import useTestimonals from './useTestimonials'
+
+
 type EditTestimonialModal = ModalProps & {
-  testimonial?: Testimonial
+  testimonial?: NewTestimonial | Testimonial
 }
 
-export default function SoftwareTestimonials({token}: {token: string }) {
+export default function SoftwareTestimonials() {
+  const {token} = useSession()
   const {showErrorMessage, showSuccessMessage} = useSnackbar()
-  const {pageState, dispatchPageState} = useContext(editSoftwareContext)
-  const {software} = pageState
-  const [testimonials, setTestimonials] = useState<Testimonial[]>([])
-  const [loading, setLoading] = useState(true)
+  const {loading,software,testimonials,setTestimonials} = useTestimonals()
   const [modal, setModal] = useState<ModalStates<EditTestimonialModal>>({
     edit: {
       open: false,
@@ -41,34 +44,6 @@ export default function SoftwareTestimonials({token}: {token: string }) {
       open: false
     }
   })
-
-  // destructure methods from react-hook-form
-  const {handleSubmit, reset, control} = useForm<{update:boolean}>({
-    mode: 'onChange',
-    defaultValues: {
-      update:false
-    }
-  })
-
-  useEffect(() => {
-    let abort = false
-    const getTestimonials = async (software:string,token:string) => {
-      const resp = await getTestimonialsForSoftware({
-        software,
-        token,
-        frontend:true
-      })
-      if (abort) return
-      // update state
-      setTestimonials(resp ?? [])
-      setLoading(false)
-    }
-    if (software?.id && token) {
-      getTestimonials(software.id,token)
-    }
-
-    return () => { abort = true }
-  },[software?.id,token])
 
   // if loading show loader
   if (loading) return (
@@ -95,7 +70,7 @@ export default function SoftwareTestimonials({token}: {token: string }) {
     }
   }
 
-  function loadTestimonialIntoModal(testimonial:Testimonial,pos?:number) {
+  function loadTestimonialIntoModal(testimonial:NewTestimonial|Testimonial,pos?:number) {
     setModal({
       edit: {
         open: true,
@@ -131,7 +106,6 @@ export default function SoftwareTestimonials({token}: {token: string }) {
   }
 
   function onEdit(pos: number){
-    // console.log('edit testimonial at ...', pos)
     const testimonial = testimonials[pos]
     // update position if null
     if (!testimonial.position) {
@@ -141,21 +115,21 @@ export default function SoftwareTestimonials({token}: {token: string }) {
     loadTestimonialIntoModal(testimonial,pos)
   }
 
-  async function onSubmitTestimonial({data,pos}:{data:Testimonial,pos?:number}) {
+  async function onSubmitTestimonial({data,pos}:{data:Testimonial|NewTestimonial,pos?:number}) {
     // debugger
     closeModals()
     // if id present we update
     if (data?.id) {
-      const resp = await patchTestimonial({testimonial: data, token})
+      const resp = await patchTestimonial({testimonial: data as Testimonial, token})
       // debugger
       if (resp.status === 200) {
-        updateTestimonialList({data,pos})
+        updateTestimonialList({data:data as Testimonial,pos})
       } else {
         showErrorMessage(`Failed to update testimonial. Error: ${resp.message}`)
       }
     } else {
       // new testimonial
-      const resp = await postTestimonial({testimonial: data, token})
+      const resp = await postTestimonial({testimonial: data as NewTestimonial, token})
       // debugger
       if (resp.status === 201) {
         // we receive processed item as message
@@ -169,7 +143,7 @@ export default function SoftwareTestimonials({token}: {token: string }) {
   }
 
   function onDelete(pos: number) {
-    const displayName = `testimonial from ${testimonials[pos].source}`
+    const displayName = `${testimonials[pos].source}`
     setModal({
       edit: {
         open: false
@@ -188,7 +162,7 @@ export default function SoftwareTestimonials({token}: {token: string }) {
     // debugger
     const testimonial = testimonials[pos]
     if (testimonial?.id) {
-      const resp = await deleteTestimonialById({id: testimonial?.id, token})
+      const resp = await deleteTestimonialById({id: testimonial?.id ?? '', token})
       // debugger
       if (resp.status === 200) {
         // showSuccessMessage("Removed teste")
@@ -215,30 +189,10 @@ export default function SoftwareTestimonials({token}: {token: string }) {
     if (list.length > 0) patchPositions(list)
   }
 
-  function onDragEnd({destination, source}: DropResult){
-    // dropped outside the list
-    if (!destination) return
-    const newItems = reorderList({
-      list:testimonials,
-      startIndex:source.index,
-      endIndex:destination.index
-    }).map((item,pos)=>{
-      // renumber
-      item.position=pos+1
-      return item
-    })
-    // debugger
-    setTestimonials(newItems)
-    // position changed
-    if (source.index !== destination.index) {
-      dispatchPageState({
-        type: EditSoftwareActionType.UPDATE_STATE,
-        payload: {
-          isDirty:true,
-          isValid:true,
-        }
-      })
-    }
+  function onSorted(items: Testimonial[]) {
+    // set updated items
+    patchPositions(items)
+    setTestimonials(items)
   }
 
   /**
@@ -247,26 +201,9 @@ export default function SoftwareTestimonials({token}: {token: string }) {
    */
   async function patchPositions(data:Testimonial[]) {
     const resp = await patchTestimonialPositions({testimonials:data, token})
-    if (resp.status === 200) {
-      // after we patched all items
-      dispatchPageState({
-        type: EditSoftwareActionType.UPDATE_STATE,
-        payload: {
-          isDirty:false,
-          isValid:true,
-        }
-      })
-    } else {
+    if (resp.status !== 200) {
       showErrorMessage(`Failed to update testimonial positions! Error: ${resp.message}`)
     }
-  }
-
-  /**
-   * This fn is called by "dummy" form which is
-   * linked to Save button at the header of the page
-   */
-  function patchSubmit() {
-    patchPositions(testimonials)
   }
 
   function getTestimonialSubtitle() {
@@ -278,15 +215,6 @@ export default function SoftwareTestimonials({token}: {token: string }) {
 
   return (
     <section className="flex-1">
-      <form
-        id={pageState.step?.formId}
-        onSubmit={handleSubmit(patchSubmit)}>
-        {/*
-          This form is used to enable Save button in the header
-          and trigger saving item positions when drag-and-drop
-          <input type="hidden" {...register('update') } />
-        */}
-      </form>
       <EditSoftwareSection>
         <div className="py-4">
           <EditSectionTitle
@@ -294,17 +222,18 @@ export default function SoftwareTestimonials({token}: {token: string }) {
             subtitle={getTestimonialSubtitle()}
           >
             <Button
+              data-testid="add-testimonial-btn"
               startIcon={<AddIcon />}
               onClick={onAdd}
             >
               Add
             </Button>
           </EditSectionTitle>
-          <SoftwareTestimonialsDndList
-            testimonials={testimonials}
+          <SortableTestimonialList
+            items={testimonials}
             onEdit={onEdit}
             onDelete={onDelete}
-            onDragEnd={onDragEnd}
+            onSorted={onSorted}
           />
         </div>
       </EditSoftwareSection>
@@ -319,7 +248,7 @@ export default function SoftwareTestimonials({token}: {token: string }) {
         title="Remove testimonial"
         open={modal.delete.open}
         body={
-          <p>Are you sure you want to remove <strong>{modal.delete.displayName ?? ''}</strong>?</p>
+          <p>Are you sure you want to remove testimonial from source <strong>{modal.delete.displayName ?? ''}</strong>?</p>
         }
         onCancel={closeModals}
         onDelete={()=>deleteTestimonial(modal.delete.pos)}

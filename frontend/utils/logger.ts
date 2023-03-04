@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2021 - 2022 Dusan Mijatovic (dv4all)
+// SPDX-FileCopyrightText: 2021 - 2022 dv4all
+//
+// SPDX-License-Identifier: Apache-2.0
 
 export type LogType = ('info'|'warn'|'error')
 
@@ -16,8 +20,7 @@ export default function logger(
     break
   default:
     // info logs only in dev
-    // ensure NEXT_PUBLIC_ENV=dev is present .env.local
-    if (process.env.NEXT_PUBLIC_ENV==='dev'){
+    if (process.env.NODE_ENV ==='development'){
       // eslint-disable-next-line
       console.log(`[INFO] ${message}`)
     }

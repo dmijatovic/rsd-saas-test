@@ -1,13 +1,25 @@
+// SPDX-FileCopyrightText: 2022 - 2023 Dusan Mijatovic (dv4all)
+// SPDX-FileCopyrightText: 2022 - 2023 dv4all
+//
+// SPDX-License-Identifier: Apache-2.0
+
+import logger from './logger'
+
 /**
  * Array sorting functions for array of objects.
 */
 
-export function sortOnStrProp(itemA:any, itemB:any, prop:string, sortDir:'asc'|'desc'='asc'){
-  // ignore case
-  const nameA = itemA[prop].toUpperCase()
-  const nameB = itemB[prop].toUpperCase()
-
-  return sortItems(nameA,nameB,sortDir)
+export function sortOnStrProp(itemA: any, itemB: any, prop: string, sortDir: 'asc' | 'desc' = 'asc') {
+  try {
+    // ignore case
+    const nameA = itemA[prop].toUpperCase()
+    const nameB = itemB[prop].toUpperCase()
+    return sortItems(nameA,nameB,sortDir)
+  } catch (e: any) {
+    // on error we log and return neutral score
+    logger(`sortOnStrProp failed. Error: ${e.message}`)
+    return 0
+  }
 }
 
 export function sortOnDateProp(itemA: any, itemB: any, prop: string, sortDir: 'asc' | 'desc' = 'asc'){
@@ -40,3 +52,47 @@ function sortItems(valA: any, valB: any, sortDir: 'asc' | 'desc' = 'asc'){
   // values are equal
   return 0
 }
+
+
+export function sortBySearchFor(itemA: any, itemB: any, prop: string, searchFor:string) {
+  const valA:string = itemA[prop]
+  const valB:string = itemB[prop]
+
+  // exact match
+  if (
+    valA.toLowerCase() == searchFor.toLowerCase()
+  ) {
+    return -1
+  }
+
+  if (
+    valB.toLowerCase() == searchFor.toLowerCase()
+  ) {
+    return 1
+  }
+
+  // get position of term, -1 = not found
+  const posA = valA.toLowerCase().indexOf(searchFor.toLowerCase())
+  const posB = valB.toLowerCase().indexOf(searchFor.toLowerCase())
+
+  // both items contain the term
+  if (posA > -1 && posB > -1) {
+    // found in A closer to left
+    if (posA < posB) return -1
+    // found in B closer to left
+    return 1
+  }
+  // found only in A
+  if (posA > -1 && posB === -1) {
+    return -1
+  }
+  // found only in B
+  if (posA === -1 && posB > -1) {
+    // found in B
+    return 1
+  }
+
+  // no change of order
+  return 0
+}
+

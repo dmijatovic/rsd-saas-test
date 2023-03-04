@@ -1,11 +1,28 @@
-import {useState, useRef, useEffect} from 'react'
+// SPDX-FileCopyrightText: 2022 Dusan Mijatovic (dv4all)
+// SPDX-FileCopyrightText: 2022 dv4all
+//
+// SPDX-License-Identifier: Apache-2.0
+
+import {useState, useEffect, FocusEventHandler} from 'react'
 import Tabs from '@mui/material/Tabs'
 import Tab from '@mui/material/Tab'
 
 import ReactMarkdownWithSettings from '../layout/ReactMarkdownWithSettings'
 
-export default function MarkdownInputWithPreview({markdown,register,disabled=true,autofocus=false}:
-  { markdown:string, register: any, disabled?:boolean,autofocus?:boolean }) {
+type MarkdownInputWithPreviewProps = {
+  markdown: string,
+  register: any,
+  disabled?: boolean,
+  autofocus?: boolean,
+  helperInfo?: {
+    length: number
+    maxLength: number
+  }
+  onBlur?:(e:FocusEventHandler<HTMLTextAreaElement>)=>void
+}
+
+export default function MarkdownInputWithPreview({markdown, register, disabled = true,
+  autofocus = false, helperInfo, onBlur}:MarkdownInputWithPreviewProps) {
   const [tab, setTab] = useState(0)
 
   useEffect(() => {
@@ -14,15 +31,24 @@ export default function MarkdownInputWithPreview({markdown,register,disabled=tru
     // this is quickfix using object id
     const textInput = document.getElementById('markdown-textarea')
     if (textInput) {
+      // save scroll position
+      const scrollLeft = window.pageXOffset || (document.documentElement || document.body.parentNode || document.body).scrollLeft
+      const scrollTop = window.pageYOffset || (document.documentElement || document.body.parentNode || document.body).scrollTop
+      // reset height
+      textInput.style.height = 'auto'
+      // get new height
       const height = textInput.scrollHeight
+      // assign the height
       if (height > 432) {
         textInput.style.height = `${height}px`
       } else {
         // default height
         textInput.style.height = '432px'
       }
+      // recover scroll position
+      window.scrollTo(scrollLeft, scrollTop)
     }
-  }, [])
+  }, [markdown])
 
   useEffect(() => {
     if (autofocus === true) {
@@ -40,27 +66,48 @@ export default function MarkdownInputWithPreview({markdown,register,disabled=tru
     setTab(newValue)
   }
 
+  function getHelperTextMsg() {
+    if (helperInfo)
+      if (helperInfo?.length > helperInfo.maxLength) {
+      return (
+        <div className="py-[1rem] px-[2rem] text-xs text-error">
+          {helperInfo?.length || 0}/{helperInfo?.maxLength}
+        </div>
+      )
+    } else {
+      return (
+        <div className="py-[1rem] px-[2rem] text-xs opacity-70">
+          {helperInfo?.length || 0}/{helperInfo.maxLength}
+        </div>
+      )
+      }
+    return null
+  }
+
   return (
     <article className="border rounded-sm min-h-[33rem]">
-      <Tabs
-        value={tab}
-        onChange={handleChange}
-        aria-label="Tabs"
-        sx={{
-          padding:'1rem 2rem'
-        }}
-      >
-        <Tab
-          id={`tab-${tab}`}
-          label="Markdown"
-          aria-controls={`markdown-tabpanel-${tab}`}
-        />
-        <Tab
-          id={`tab-${tab}`}
-          label="Preview"
-          aria-controls={`markdown-tabpanel-${tab}`}
-        />
-      </Tabs>
+      <div className="flex flex-col-reverse md:flex-row md:justify-between md:items-center">
+        <Tabs
+          value={tab}
+          onChange={handleChange}
+          aria-label="Tabs"
+          sx={{
+            padding:['0.5rem 1rem','1rem 2rem']
+          }}
+        >
+          <Tab
+            id={`tab-${tab}`}
+            label="Markdown"
+            aria-controls={`markdown-tabpanel-${tab}`}
+          />
+          <Tab
+            id={`tab-${tab}`}
+            label="Preview"
+            aria-controls={`markdown-tabpanel-${tab}`}
+          />
+        </Tabs>
+        {getHelperTextMsg()}
+      </div>
       <div
         id={`markdown-tabpanel-${tab}`}
         role="tabpanel"
@@ -72,12 +119,9 @@ export default function MarkdownInputWithPreview({markdown,register,disabled=tru
           name="markdown-input"
           id="markdown-textarea"
           rows={20}
-          className="text-secondary w-full h-full py-4 px-8 font-mono text-sm"
-          onInput={({target}:{target:any}) => {
-            target.style.height = ''
-            target.style.height = target.scrollHeight + 'px'
-          }}
+          className="text-base-content w-full h-full pt-4 px-8 font-mono text-sm"
           {...register}
+          onBlur={onBlur}
         ></textarea>
       </div>
       <div

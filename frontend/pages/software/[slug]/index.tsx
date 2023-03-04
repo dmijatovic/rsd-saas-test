@@ -1,62 +1,79 @@
+// SPDX-FileCopyrightText: 2021 - 2023 Dusan Mijatovic (dv4all)
+// SPDX-FileCopyrightText: 2021 - 2023 dv4all
+// SPDX-FileCopyrightText: 2022 Christian Meeßen (GFZ) <christian.meessen@gfz-potsdam.de>
+// SPDX-FileCopyrightText: 2022 Helmholtz Centre Potsdam - GFZ German Research Centre for Geosciences
+//
+// SPDX-License-Identifier: Apache-2.0
+
 import {useEffect, useState} from 'react'
 import {GetServerSidePropsContext} from 'next'
+import {ScriptProps} from 'next/script'
 
-import {app} from '../../../config/app'
-import PageMeta from '../../../components/seo/PageMeta'
-import OgMetaTags from '../../../components/seo/OgMetaTags'
-import CitationMeta from '../../../components/seo/CitationMeta'
-import CanoncialUrl from '../../../components/seo/CanonicalUrl'
-import AppHeader from '../../../components/layout/AppHeader'
-import AppFooter from '../../../components/layout/AppFooter'
-import PageContainer from '../../../components/layout/PageContainer'
-import ContentInTheMiddle from '../../../components/layout/ContentInTheMiddle'
-import SoftwareIntroSection from '../../../components/software/SoftwareIntroSection'
-import GetStartedSection from '../../../components/software/GetStartedSection'
-import CitationSection from '../../../components/software/CitationSection'
-import AboutSection from '../../../components/software/AboutSection'
-import MentionsSection from '../../../components/software/MentionsSection'
-import ContributorsSection from '../../../components/software/ContributorsSection'
-import TestimonialSection from '../../../components/software/TestimonialsSection'
-import RelatedToolsSection from '../../../components/software/RelatedToolsSection'
+import {app} from '~/config/app'
+import {isMaintainerOfSoftware} from '~/auth/permissions/isMaintainerOfSoftware'
+import {getAccountFromToken} from '~/auth/jwtUtils'
+import PageMeta from '~/components/seo/PageMeta'
+import OgMetaTags from '~/components/seo/OgMetaTags'
+import CitationMeta from '~/components/seo/CitationMeta'
+import CanoncialUrl from '~/components/seo/CanonicalUrl'
+import AppHeader from '~/components/AppHeader'
+import AppFooter from '~/components/AppFooter'
+import SoftwareIntroSection from '~/components/software/SoftwareIntroSection'
+import GetStartedSection from '~/components/software/GetStartedSection'
+import CitationSection from '~/components/software/CitationSection'
+import AboutSection from '~/components/software/AboutSection'
+import MentionsSection from '~/components/software/MentionsSection'
+import ContributorsSection from '~/components/software/ContributorsSection'
+import TestimonialSection from '~/components/software/TestimonialsSection'
+import EditPageButton from '~/components/layout/EditPageButton'
+import OrganisationsSection from '~/components/software/OrganisationsSection'
+import RelatedProjectsSection from '~/components/projects/RelatedProjectsSection'
+import RelatedSoftwareSection from '~/components/software/RelatedSoftwareSection'
 import {
   getSoftwareItem,
   getRepostoryInfoForSoftware,
-  getCitationsForSoftware,
-  getTagsForSoftware,
   getLicenseForSoftware,
   getContributorMentionCount,
   getRemoteMarkdown,
   ContributorMentionCount,
-} from '../../../utils/getSoftware'
-import {isMaintainerOfSoftware} from '../../../utils/editSoftware'
-import logger from '../../../utils/logger'
-import {License, RelatedTools, RepositoryInfo, SoftwareItem, Tag} from '../../../types/SoftwareTypes'
-import {SoftwareCitationInfo} from '../../../types/SoftwareCitation'
-import {ScriptProps} from 'next/script'
-import {Contributor} from '../../../types/Contributor'
-import {Testimonial} from '../../../types/Testimonial'
-import {getDisplayName} from '../../../utils/getDisplayName'
-import {getAccountFromToken} from '../../../auth/jwtUtils'
-import EditSoftwareButton from '../../../components/software/edit/EditSoftwareButton'
-import {getContributorsForSoftware} from '../../../utils/editContributors'
-import {getTestimonialsForSoftware} from '../../../utils/editTestimonial'
-import {getRelatedToolsForSoftware} from '../../../utils/editRelatedSoftware'
-import {MentionForSoftware} from '../../../types/MentionType'
-import {getMentionsForSoftware} from '../../../utils/editMentions'
+  getKeywordsForSoftware,
+  getRelatedProjectsForSoftware,
+  getReleasesForSoftware,
+  SoftwareVersion,
+} from '~/utils/getSoftware'
+import logger from '~/utils/logger'
+import {getDisplayName} from '~/utils/getDisplayName'
+import {getContributorsForSoftware} from '~/utils/editContributors'
+import {getTestimonialsForSoftware} from '~/utils/editTestimonial'
+import {getRelatedSoftwareForSoftware} from '~/utils/editRelatedSoftware'
+import {getMentionsForSoftware} from '~/utils/editMentions'
+import {getParticipatingOrganisations} from '~/utils/editOrganisation'
+import {
+  KeywordForSoftware, License, RepositoryInfo,
+  SoftwareItem, SoftwareListItem
+} from '~/types/SoftwareTypes'
+import {Contributor} from '~/types/Contributor'
+import {Testimonial} from '~/types/Testimonial'
+import {MentionItemProps} from '~/types/Mention'
+import {ParticipatingOrganisationProps} from '~/types/Organisation'
+import {RelatedProject} from '~/types/Project'
+import NoContent from '~/components/layout/NoContent'
 
 interface SoftwareIndexData extends ScriptProps{
   slug: string
   software: SoftwareItem
-  citationInfo: SoftwareCitationInfo
-  tagsInfo: Tag[]
+  releases: SoftwareVersion[]
+  keywords: KeywordForSoftware[]
   licenseInfo: License[]
   repositoryInfo: RepositoryInfo
   softwareIntroCounts: ContributorMentionCount
-  mentions: MentionForSoftware[]
+  mentions: MentionItemProps[]
   testimonials: Testimonial[]
   contributors: Contributor[]
-  relatedTools: RelatedTools[]
-  isMaintainer: boolean
+  relatedSoftware: SoftwareListItem[]
+  relatedProjects: RelatedProject[]
+  isMaintainer: boolean,
+  organisations: ParticipatingOrganisationProps[],
 }
 
 export default function SoftwareIndexPage(props:SoftwareIndexData) {
@@ -64,10 +81,11 @@ export default function SoftwareIndexPage(props:SoftwareIndexData) {
   const [author, setAuthor] = useState('')
   // extract data from props
   const {
-    software, citationInfo, tagsInfo,
+    software, releases, keywords,
     licenseInfo, repositoryInfo, softwareIntroCounts,
     mentions, testimonials, contributors,
-    relatedTools, isMaintainer, slug
+    relatedSoftware, relatedProjects, isMaintainer,
+    slug, organisations
   } = props
 
   useEffect(() => {
@@ -84,19 +102,15 @@ export default function SoftwareIndexPage(props:SoftwareIndexData) {
   },[contributors])
 
   if (!software?.brand_name){
-    return (
-      <ContentInTheMiddle>
-        <h2>No content</h2>
-      </ContentInTheMiddle>
-    )
+    return <NoContent />
   }
-
+  // console.log('SoftwareIndexPage...releases...', releases)
   return (
     <>
       {/* Page Head meta tags */}
       <PageMeta
         title={`${software?.brand_name} | ${app.title}`}
-        description={software.short_statement}
+        description={software.short_statement ?? ''}
       />
       {/* Page Head meta tags */}
       <CitationMeta
@@ -108,51 +122,66 @@ export default function SoftwareIndexPage(props:SoftwareIndexData) {
       {/* Page Head meta tags */}
       <OgMetaTags
         title={software?.brand_name}
-        description={software.short_statement}
-        url={resolvedUrl}
+        description={software.short_statement ?? ''}
       />
-      <CanoncialUrl
-        canonicalUrl={resolvedUrl}
+      <CanoncialUrl />
+      <AppHeader />
+      {/* Edit page button only when maintainer */}
+      <EditPageButton
+        title="Edit software"
+        url={`${slug}/edit`}
+        isMaintainer={isMaintainer}
+        variant="text"
       />
-      <AppHeader editButton={
-        isMaintainer ?
-        <EditSoftwareButton slug={slug} />
-        : undefined
-      }/>
-      <PageContainer>
-        <SoftwareIntroSection
-          brand_name={software.brand_name}
-          short_statement={software.short_statement}
-          counts={softwareIntroCounts}
-        />
-      </PageContainer>
+      <SoftwareIntroSection
+        brand_name={software.brand_name}
+        short_statement={software.short_statement ?? ''}
+        counts={softwareIntroCounts}
+      />
       <GetStartedSection
         get_started_url={software.get_started_url}
+        repository_url={repositoryInfo?.url}
         commit_history={repositoryInfo?.commit_history}
+        commit_history_scraped_at={repositoryInfo?.commit_history_scraped_at}
       />
       <CitationSection
-        citationInfo={citationInfo}
+        releases={releases}
         concept_doi={software.concept_doi}
       />
       <AboutSection
         brand_name={software.brand_name}
         description={software?.description ?? ''}
-        tags={tagsInfo}
+        description_type={software?.description_type}
+        keywords={keywords}
         licenses={licenseInfo}
-        repository={repositoryInfo?.url}
         languages={repositoryInfo?.languages}
+        repository={repositoryInfo?.url}
+        platform={repositoryInfo?.code_platform}
+        image_id={software.image_id}
       />
+      {/* Participating organisations */}
+      <OrganisationsSection
+        organisations={organisations}
+      />
+      {/* Mentions */}
       <MentionsSection
         mentions={mentions}
       />
+      {/* Testimonials */}
       <TestimonialSection
         testimonials={testimonials}
       />
+      {/* Contributors */}
       <ContributorsSection
         contributors={contributors}
       />
-      <RelatedToolsSection
-        relatedTools={relatedTools}
+      {/* Related projects (uses project components) */}
+      <RelatedProjectsSection
+        relatedProjects={relatedProjects}
+      />
+      {/* Related software */}
+      <RelatedSoftwareSection
+        relatedSoftware={relatedSoftware}
       />
       {/* bottom spacer */}
       <section className="py-12"></section>
@@ -169,7 +198,7 @@ export async function getServerSideProps(context:GetServerSidePropsContext) {
     // extract rsd_token
     const token = cookies['rsd_token']
     const slug = params?.slug?.toString()
-    const account = getAccountFromToken(token)
+    const userInfo = getAccountFromToken(token)
     const software = await getSoftwareItem(slug,token)
     // console.log('getServerSideProps...software...', software)
     if (typeof software == 'undefined'){
@@ -188,10 +217,10 @@ export async function getServerSideProps(context:GetServerSidePropsContext) {
     }
     // fetch all info about software in parallel based on software.id
     const fetchData = [
-      // citationInfo
-      getCitationsForSoftware(software.id,token),
-      // tagsInfo
-      getTagsForSoftware(software.id,false,token),
+      // software versions info
+      getReleasesForSoftware(software.id,token),
+      // keywords
+      getKeywordsForSoftware(software.id,false,token),
       // licenseInfo
       getLicenseForSoftware(software.id, false, token),
       // repositoryInfo: url, languages and commits
@@ -205,37 +234,45 @@ export async function getServerSideProps(context:GetServerSidePropsContext) {
       // contributors
       getContributorsForSoftware({software:software.id,frontend:false,token}),
       // relatedTools
-      getRelatedToolsForSoftware({software:software.id,frontend:false,token}),
+      getRelatedSoftwareForSoftware({software: software.id, frontend: false, token}),
+      // relatedProjects
+      getRelatedProjectsForSoftware({software: software.id, token, frontend: false}),
       // check if maintainer
-      isMaintainerOfSoftware({slug,account,token,frontend:false})
+      isMaintainerOfSoftware({slug, account:userInfo?.account, token, frontend: false}),
+      // get organisations
+      getParticipatingOrganisations({software:software.id,frontend:false,token})
     ]
     const [
-      citationInfo,
-      tagsInfo,
+      releases,
+      keywords,
       licenseInfo,
       repositoryInfo,
       softwareIntroCounts,
       mentions,
       testimonials,
       contributors,
-      relatedTools,
-      isMaintainer
+      relatedSoftware,
+      relatedProjects,
+      isMaintainer,
+      organisations
     ] = await Promise.all(fetchData)
 
     // pass data to page component as props
     return {
       props: {
         software,
-        citationInfo,
-        tagsInfo,
+        releases,
+        keywords,
         licenseInfo,
         repositoryInfo,
         softwareIntroCounts,
         mentions,
         testimonials,
         contributors,
-        relatedTools,
-        isMaintainer,
+        relatedSoftware,
+        relatedProjects,
+        isMaintainer: isMaintainer ? isMaintainer : userInfo?.role==='rsd_admin',
+        organisations,
         slug
       }
     }

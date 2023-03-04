@@ -1,9 +1,18 @@
+// SPDX-FileCopyrightText: 2022 Dusan Mijatovic (dv4all)
+// SPDX-FileCopyrightText: 2022 Ewan Cahen (Netherlands eScience Center) <e.cahen@esciencecenter.nl>
+// SPDX-FileCopyrightText: 2022 Netherlands eScience Center
+// SPDX-FileCopyrightText: 2022 dv4all
+//
+// SPDX-License-Identifier: Apache-2.0
+
 /* eslint-disable @next/next/no-img-element */
 import EmailIcon from '@mui/icons-material/Email'
 import Avatar from '@mui/material/Avatar'
+import {getImageUrl} from '~/utils/editImage'
 
 import {Contributor} from '../../types/Contributor'
 import {getDisplayName, getDisplayInitials} from '../../utils/getDisplayName'
+import LogoOrcid from '~/assets/logos/logo-orcid.svg'
 
 
 export default function ContactPersonCard({person}: { person: Contributor|null }) {
@@ -14,15 +23,17 @@ export default function ContactPersonCard({person}: { person: Contributor|null }
   function renderEmail() {
     if (person?.email_address) {
       return (
-        <a className="flex items-center md:items-start"
-          href={`mailto:${person?.email_address}`}>
-            <EmailIcon sx={{
-              mr: 1,
-              '&:hover': {
-                opacity: 'inherit'
-              }
-            }} color="primary" />
-            Mail {person?.given_names}
+        <a className="flex items-start pt-4"
+          href={`mailto:${person?.email_address}`}
+          target="_blank" rel="noreferrer"
+        >
+          <EmailIcon sx={{
+            mr: 1,
+            '&:hover': {
+              opacity: 'inherit'
+            }
+          }} color="primary" />
+          Mail {person?.given_names}
         </a>
       )
     }
@@ -31,17 +42,15 @@ export default function ContactPersonCard({person}: { person: Contributor|null }
   return (
     <article className="flex flex-col bg-white max-w-md">
       <h3 className="text-center font-medium px-6 py-4 uppercase bg-primary text-white md:text-left">Contact person</h3>
-      <div className="flex flex-col p-6 md:flex-row 2xl:flex-col">
-        {/* <div className="self-center md:mr-8 2xl:mr-0"> */}
+      <div className="flex flex-col p-8 gap-8 md:flex-row 2xl:flex-col">
         <Avatar
           alt={displayName ?? ''}
-          src={person.avatar_url ?? ''}
+          src={getImageUrl(person.avatar_id) ?? ''}
           sx={{
             width: '7rem',
             height: '7rem',
             fontSize: '2rem',
-            alignSelf: 'center',
-            marginRight:['0rem','2rem']
+            alignSelf: 'center'
           }}
         >
           {displayName ?
@@ -49,12 +58,25 @@ export default function ContactPersonCard({person}: { person: Contributor|null }
             :null
           }
         </Avatar>
-        {/* </div> */}
-        <div className="flex-1 flex flex-col items-center py-4 md:items-start lg:pt-8">
+        <div className="flex-1 flex flex-col items-start">
           <h4 className="text-primary text-2xl">{displayName}</h4>
-          <h5 className="py-2">
-            {person?.affiliation ?? ''}
+          {person?.role && <h5 className="pt-1">
+            {person?.role}
           </h5>
+          }
+          {
+            person?.affiliation && <h5 className="pt-1">
+              {person?.affiliation}
+            </h5>
+          }
+          {person?.orcid && <h5 className="pt-1">
+            <a href={'https://orcid.org/' + person.orcid} target="_blank" rel="noreferrer"
+              style={{whiteSpace:'nowrap'}}
+            >
+              <LogoOrcid className="inline max-w-[1.5rem] mr-2" />
+              <span className="align-bottom">{person.orcid}</span>
+            </a>
+          </h5>}
           {renderEmail()}
         </div>
       </div>

@@ -1,3 +1,9 @@
+// SPDX-FileCopyrightText: 2022 Dusan Mijatovic (dv4all)
+// SPDX-FileCopyrightText: 2022 Dusan Mijatovic (dv4all) (dv4all)
+// SPDX-FileCopyrightText: 2022 dv4all
+//
+// SPDX-License-Identifier: Apache-2.0
+
 import {useEffect} from 'react'
 import {useRouter} from 'next/router'
 import nprogress from 'nprogress'
@@ -33,8 +39,8 @@ function onWebsiteChange(e: any, warning: string) {
 }
 
 
-export default function useUnsavedChanges({isDirty, isValid, warning}:
-  { isDirty: boolean, isValid: boolean, warning:string }) {
+export default function useOnUnsavedChange({isDirty, isValid, warning, dirtyFields}:
+  { isDirty: boolean, isValid: boolean, warning:string, dirtyFields?:{} }) {
   const router = useRouter()
   useEffect(() => {
     // needs to be registered fn in order to remove it on unload

@@ -1,10 +1,14 @@
+// SPDX-FileCopyrightText: 2022 Dusan Mijatovic (dv4all)
+// SPDX-FileCopyrightText: 2022 dv4all
+//
+// SPDX-License-Identifier: Apache-2.0
+
 import {useState,useEffect} from 'react'
 import {useAuth} from '.'
 
 import PageErrorMessage from '../components/layout/PageErrorMessage'
 import ContentLoader from '../components/layout/ContentLoader'
-import {isMaintainerOfSoftware} from '../utils/editSoftware'
-import logger from '../utils/logger'
+import {isMaintainerOf} from './permissions/isMaintainerOf'
 
 /**
  * Wrap the content you want to protect in this component.
@@ -14,7 +18,8 @@ import logger from '../utils/logger'
  * based on page slug. NOTE! Slug is optional prop and if not provided the
  * maintainer validation is not performed.
  */
-export default function ProtectedContent({children, slug}: { children: any, slug?: string }) {
+export default function ProtectedContent({children, pageType='software', slug=''}:
+  { children: any, pageType?:'software'|'project', slug?: string }) {
   const {session} = useAuth()
   // keep maintainer flag
   const [isMaintainer, setIsMaintainer] = useState(false)
@@ -22,28 +27,32 @@ export default function ProtectedContent({children, slug}: { children: any, slug
   // is maintainer of the software
   const [status, setStatus] = useState(slug ? 'loading' : session?.status)
 
+  // console.group('ProtectedContent')
+  // console.log('pageType...', pageType)
+  // console.log('slug...', slug)
+  // console.log('status...', status)
+  // console.log('expired...', expired)
+  // console.log('token...', token)
+  // console.log('isMaintainer...', isMaintainer)
+  // console.groupEnd()
+
   useEffect(() => {
-    let abort = false
-    if (slug && session.token) {
-      setStatus('loading')
-      // validate if user is maintainer
-      // of this software
-      isMaintainerOfSoftware({
+    async function getMaintainerFlag() {
+      const maintainer = await isMaintainerOf({
         slug,
-        account: session?.user?.account ?? '',
-        token: session?.token
-      }).then(resp => {
-        // stop on abort
-        if (abort) return
-        // update states
-        setIsMaintainer(resp)
-        setStatus(session.status)
+        pageType,
+        token: session.token,
+        account: session.user?.account
       })
-    } else if (session?.status) {
+      setIsMaintainer(maintainer)
       setStatus(session.status)
     }
-    return () => { abort = true }
-  }, [slug, session.token, session?.user?.account, session.status])
+    if (slug && session.token && pageType) {
+      getMaintainerFlag()
+    } else if (session.status) {
+      setStatus(session.status)
+    }
+  },[slug,session,pageType])
 
   // return nothing
   if (status === 'loading') return <ContentLoader />
@@ -54,7 +63,13 @@ export default function ProtectedContent({children, slug}: { children: any, slug
     return children
   }
 
-  // isMaintainer of software and is authenticated
+  // rsd_admin has full access
+  if (status === 'authenticated' && session.user?.role==='rsd_admin') {
+    // logger(`ProtectedContent...authenticated user...maintainer of ${slug}`, 'info')
+    return children
+  }
+
+  // isMaintainer and is authenticated
   if (status === 'authenticated' && slug && isMaintainer) {
     // logger(`ProtectedContent...authenticated user...maintainer of ${slug}`, 'info')
     return children

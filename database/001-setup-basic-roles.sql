@@ -1,21 +1,26 @@
-CREATE ROLE authenticator NOINHERIT LOGIN PASSWORD 'simplepassword';
+-- SPDX-FileCopyrightText: 2021 - 2022 Ewan Cahen (Netherlands eScience Center) <e.cahen@esciencecenter.nl>
+-- SPDX-FileCopyrightText: 2021 - 2022 Netherlands eScience Center
+--
+-- SPDX-License-Identifier: Apache-2.0
 
-CREATE ROLE web_anon NOLOGIN;
+CREATE ROLE rsd_authenticator NOINHERIT LOGIN PASSWORD 'POSTGRES_AUTHENTICATOR_PASSWORD';
 
-GRANT USAGE ON SCHEMA public TO web_anon;
+CREATE ROLE rsd_web_anon NOLOGIN;
 
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO web_anon;
+GRANT USAGE ON SCHEMA public TO rsd_web_anon;
 
-GRANT web_anon TO authenticator;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO rsd_web_anon;
+
+GRANT rsd_web_anon TO rsd_authenticator;
 
 CREATE ROLE rsd_admin NOLOGIN;
 
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO rsd_admin;
 
-GRANT rsd_admin TO authenticator;
+GRANT rsd_admin TO rsd_authenticator;
 
 CREATE ROLE rsd_user NOLOGIN;
 
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO rsd_user;
 
-GRANT rsd_user TO authenticator;
+GRANT rsd_user TO rsd_authenticator;

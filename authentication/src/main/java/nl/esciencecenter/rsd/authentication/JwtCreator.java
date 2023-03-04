@@ -1,3 +1,10 @@
+// SPDX-FileCopyrightText: 2022 Dusan Mijatovic (dv4all)
+// SPDX-FileCopyrightText: 2022 Ewan Cahen (Netherlands eScience Center) <e.cahen@esciencecenter.nl>
+// SPDX-FileCopyrightText: 2022 Netherlands eScience Center
+// SPDX-FileCopyrightText: 2022 dv4all
+//
+// SPDX-License-Identifier: Apache-2.0
+
 package nl.esciencecenter.rsd.authentication;
 
 import com.auth0.jwt.JWT;
@@ -7,26 +14,29 @@ import com.google.gson.Gson;
 
 import java.util.Date;
 import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 
 public class JwtCreator {
 
 	static final long ONE_HOUR_IN_MILLISECONDS = 3600_000L; // 60 * 60 * 1000
-	final String SIGNING_SECRET;
-	final Algorithm SIGNING_ALGORITHM;
+	private final String signingSecret;
+	private final Algorithm signingAlgorithm;
 
 	public JwtCreator(String signingSecret) {
-		if (signingSecret == null) throw new IllegalArgumentException("The signing secret should not be null");
-		this.SIGNING_SECRET = signingSecret;
-		this.SIGNING_ALGORITHM = Algorithm.HMAC256(SIGNING_SECRET);
+		signingSecret = Objects.requireNonNull(signingSecret);
+		this.signingSecret = signingSecret;
+		this.signingAlgorithm = Algorithm.HMAC256(this.signingSecret);
 	}
 
-	String createUserJwt(String account) {
+	String createUserJwt(UUID account, String name, boolean isAdmin) {
 		return JWT.create()
 				.withClaim("iss", "rsd_auth")
-				.withClaim("role", "rsd_user")
-				.withClaim("account", account)
+				.withClaim("role", isAdmin ? "rsd_admin" : "rsd_user")
+				.withClaim("account", account.toString())
+				.withClaim("name", name)
 				.withExpiresAt(new Date(System.currentTimeMillis() + ONE_HOUR_IN_MILLISECONDS))
-				.sign(SIGNING_ALGORITHM);
+				.sign(signingAlgorithm);
 	}
 
 	String createAdminJwt() {
@@ -34,7 +44,7 @@ public class JwtCreator {
 				.withClaim("iss", "rsd_auth")
 				.withClaim("role", "rsd_admin")
 				.withExpiresAt(new Date(System.currentTimeMillis() + ONE_HOUR_IN_MILLISECONDS))
-				.sign(SIGNING_ALGORITHM);
+				.sign(signingAlgorithm);
 	}
 
 	String refreshToken(String token) {
@@ -46,6 +56,6 @@ public class JwtCreator {
 		return JWT.create()
 				.withPayload(claimsMap)
 				.withExpiresAt(new Date(System.currentTimeMillis() + ONE_HOUR_IN_MILLISECONDS))
-				.sign(SIGNING_ALGORITHM);
+				.sign(signingAlgorithm);
 	}
 }

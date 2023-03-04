@@ -1,3 +1,8 @@
+// SPDX-FileCopyrightText: 2022 Dusan Mijatovic (dv4all)
+// SPDX-FileCopyrightText: 2022 dv4all
+//
+// SPDX-License-Identifier: Apache-2.0
+
 import styled from '@mui/system/styled'
 import {Testimonial} from '../../types/Testimonial'
 
@@ -17,7 +22,7 @@ const TestimonialContent = styled('div')(({theme}) => ({
     top: '100%',
     borderTopWidth: 0,
     borderBottomWidth: '1.5rem',
-    borderRight: '16px solid #00A3E3'
+    borderRight: `16px solid ${theme.palette.primary.main}`
   }
 }))
 

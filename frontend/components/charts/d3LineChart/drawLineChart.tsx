@@ -1,7 +1,11 @@
+// SPDX-FileCopyrightText: 2022 Dusan Mijatovic (dv4all)
+// SPDX-FileCopyrightText: 2022 dv4all
+//
+// SPDX-License-Identifier: Apache-2.0
+
 import * as d3 from 'd3'
 import {SizeType} from './useResizeObserver'
 import logger from '../../../utils/logger'
-import {colors} from '../../../styles/themeConfig'
 
 type LineData = {
   x: number,
@@ -11,7 +15,8 @@ type LineData = {
 type LineChartConfig = {
   svgEl: SVGAElement,
   dim: SizeType,
-  data: LineData[]
+  data: LineData[],
+  strokeColor: string
 }
 
 const margin = {
@@ -43,9 +48,12 @@ function timeRange(data: LineData[]) {
 
 
 export default function drawLineChart(props: LineChartConfig) {
-  const {dim: {w, h}, svgEl, data} = props
+  const {dim: {w, h}, svgEl, data, strokeColor} = props
+  // if no data return null
+  if (data.length === 0) return null
   // ignore if no size
   if (!w || !h) return
+
   // defined dimensions
   const width = w - margin.left - margin.right
   const height = h - margin.top - margin.bottom
@@ -120,7 +128,7 @@ export default function drawLineChart(props: LineChartConfig) {
       .attr('class','line')
       .attr('d',d=>generateScaledLine(d as any))
       .attr('fill','none')
-      .attr('stroke', colors.primary)
+      .attr('stroke', strokeColor)
       .attr('stroke-width', 2)
       .attr('stroke-opacity', 0.7)
 

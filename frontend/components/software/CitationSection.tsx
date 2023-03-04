@@ -1,85 +1,85 @@
+// SPDX-FileCopyrightText: 2021 - 2023 Dusan Mijatovic (dv4all)
+// SPDX-FileCopyrightText: 2021 - 2023 dv4all
+//
+// SPDX-License-Identifier: Apache-2.0
+
 import {useState,useEffect} from 'react'
-import {createTheme, ThemeProvider} from '@mui/material/styles'
 import {SelectChangeEvent} from '@mui/material/Select'
 
+import DarkThemeSection from '../layout/DarkThemeSection'
 import PageContainer from '../layout/PageContainer'
 import CiteDropdown from './CiteDropdown'
 import CitationDoi from './CitationDoi'
 import CitationDownload from './CitationDownload'
-import {SoftwareCitationInfo,SoftwareCitationContent} from '../../types/SoftwareCitation'
+import {SoftwareVersion} from '~/utils/getSoftware'
 
-const darkTheme = createTheme({
-  palette: {
-    mode: 'dark',
-  },
-})
-
-export default function CitationSection({citationInfo,concept_doi}:
-  {citationInfo:SoftwareCitationInfo, concept_doi:string|null}) {
+export default function CitationSection({releases,concept_doi}:
+  {releases:SoftwareVersion[]|null, concept_doi:string|null}) {
   const [version, setVersion]=useState('')
-  const [citation, setCitation] = useState<SoftwareCitationContent>()
+  const [citation, setCitation] = useState<SoftwareVersion>()
 
   useEffect(()=>{
     // select first option by default
-    if (citationInfo?.release_content?.length > 0){
+    if (releases && releases.length > 0){
       setVersion('0')
-      setCitation(citationInfo?.release_content[0])
+      setCitation(releases[0])
     }
-  },[citationInfo])
+  },[releases])
 
-  // do not render section if no data or not citable
-  if (!citationInfo || citationInfo.is_citable === false) {
+  // do not render section if no release data
+  if (typeof releases==='undefined' || releases===null || releases.length===0) {
     // only return spacer
     return (
       <section className="py-4"></section>
     )
   }
   // prepare release versions
-  const versions = citationInfo?.release_content?.map((item,pos)=>{
-    return {label:item.tag,value:`${pos}`}
+  const versions = releases?.map((item, pos) => {
+    if (item?.version) {
+      return {label:item?.version,value:`${pos}`}
+    } else {
+      return {label: item.doi,value:`${pos}`}
+    }
   })
 
   function onVersionChange({target}:{target:SelectChangeEvent['target']}){
     const pos = parseInt(target?.value)
-    const cite = citationInfo?.release_content[pos]
-    // update local state
-    setVersion(target?.value)
-    setCitation(cite)
+    if (releases) {
+      const cite = releases[pos]
+      // update local state
+      setVersion(target?.value)
+      setCitation(cite)
+    }
   }
 
   // render section
   return (
-    <ThemeProvider theme={darkTheme}>
-      <PageContainer className='lg:px-4'>
-        <article className="flex flex-col min-h-[16rem] px-4 py-8 bg-secondary text-white md:flex-row lg:py-10 lg:px-16 lg:translate-y-[-3rem]">
-          <div className="flex-1 flex flex-col justify-between">
-            <h2 className='py-4'
-              data-testid="citation-section-title">
-                Cite this software
-            </h2>
-            {
-              versions?.length > 0 ?
-                <CiteDropdown
-                  label="Choose a version:"
-                  options={versions}
-                  value={version}
-                  onChange={onVersionChange}
-                />
-                :null
-            }
-          </div>
-          <div className="flex-[3] flex flex-col justify-between md:px-4">
-            <CitationDoi doi={citation?.doi ?? concept_doi ?? ''} />
-            {
-              // only when citability full
-              citation?.citability==='full' ?
-                <CitationDownload citation={citation} />
-                :null
-            }
-          </div>
-
-        </article>
-      </PageContainer>
-    </ThemeProvider>
+    <PageContainer className='lg:px-4'>
+      <article className="flex flex-col min-h-[16rem] px-4 py-8 bg-secondary text-white md:flex-row lg:py-10 lg:px-16 lg:translate-y-[-3rem]">
+        <DarkThemeSection>
+        <div className="flex-1 flex flex-col justify-between">
+          <h2 className='py-4'
+            data-testid="citation-section-title">
+              Cite this software
+          </h2>
+          {
+            versions?.length > 0 ?
+              <CiteDropdown
+                label="Software version:"
+                options={versions}
+                value={version}
+                onChange={onVersionChange}
+              />
+              :null
+          }
+        </div>
+        <div className="flex-[3] flex flex-col justify-between md:px-4">
+          <CitationDoi doi={citation?.doi ?? concept_doi ?? ''} />
+          {/* NOTE! temporarly dissabled  */}
+          <CitationDownload doi={citation?.doi ?? concept_doi ?? ''} />
+        </div>
+        </DarkThemeSection>
+      </article>
+    </PageContainer>
   )
 }

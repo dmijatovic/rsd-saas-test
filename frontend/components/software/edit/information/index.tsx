@@ -1,135 +1,114 @@
-import {useEffect, useState, useContext} from 'react'
-import {useForm} from 'react-hook-form'
+// SPDX-FileCopyrightText: 2022 - 2023 dv4all
+// SPDX-FileCopyrightText: 2022 Christian Meeßen (GFZ) <christian.meessen@gfz-potsdam.de>
+// SPDX-FileCopyrightText: 2022 Dusan Mijatovic (dv4all)
+// SPDX-FileCopyrightText: 2022 Ewan Cahen (Netherlands eScience Center) <e.cahen@esciencecenter.nl>
+// SPDX-FileCopyrightText: 2022 Helmholtz Centre Potsdam - GFZ German Research Centre for Geosciences
+// SPDX-FileCopyrightText: 2022 Matthias Rüster (GFZ) <matthias.ruester@gfz-potsdam.de>
+// SPDX-FileCopyrightText: 2022 Netherlands eScience Center
+// SPDX-FileCopyrightText: 2023 Dusan Mijatovic (dv4all) (dv4all)
+//
+// SPDX-License-Identifier: Apache-2.0
 
-import {app} from '../../../../config/app'
-import {EditSoftwareItem} from '../../../../types/SoftwareTypes'
-import {updateSoftwareInfo} from '../../../../utils/editSoftware'
-import useEditSoftwareData from '../../../../utils/useEditSoftwareData'
-import useOnUnsaveChange from '../../../../utils/useOnUnsavedChange'
-import ContentLoader from '../../../layout/ContentLoader'
-import useSnackbar from '../../../snackbar/useSnackbar'
-import ControlledTextField from '../../../form/ControlledTextField'
-import EditSoftwareSection from '../EditSoftwareSection'
-import EditSectionTitle from '../EditSectionTitle'
-import editSoftwareContext from '../editSoftwareContext'
-import {EditSoftwareActionType} from '../editSoftwareContext'
-import SoftwareMarkdown from './SoftwareMarkdown'
-import SoftwareKeywords from './SoftwareKeywords'
-import SoftwareLicenses from './SoftwareLicenses'
-import SoftwarePageStatus from './SoftwarePageStatus'
+import {useEffect} from 'react'
+import {useFormContext} from 'react-hook-form'
+
+import {useSession} from '~/auth'
+import {EditSoftwareItem} from '~/types/SoftwareTypes'
+import ContentLoader from '~/components/layout/ContentLoader'
+import EditSection from '~/components/layout/EditSection'
+import EditSectionTitle from '~/components/layout/EditSectionTitle'
 import {softwareInformation as config} from '../editSoftwareConfig'
+import AutosaveConceptDoi from './AutosaveConceptDoi'
+import useSoftwareContext from '../useSoftwareContext'
+import useSoftwareToEdit from './useSoftwareToEdit'
+import AutosaveSoftwareTextField from './AutosaveSoftwareTextField'
+import AutosaveSoftwarePageStatus from './AutosaveSoftwarePageStatus'
+import AutosaveSoftwareKeywords from './AutosaveSoftwareKeywords'
+import AutosaveRepositoryUrl from './AutosaveRepositoryUrl'
+import AutosaveSoftwareLicenses from './AutosaveSoftwareLicenses'
+import AutosaveSoftwareMarkdown from './AutosaveSoftwareMarkdown'
+import AutosaveSoftwareLogo from './AutosaveSoftwareLogo'
 
-export default function SoftwareInformation({slug,token}:{slug:string,token: string}) {
-  const {showErrorMessage,showSuccessMessage} = useSnackbar()
-  const {pageState, dispatchPageState} = useContext(editSoftwareContext)
-  const {loading:apiLoading, editSoftware, setEditSoftware} = useEditSoftwareData({slug,token})
-  const [loading, setLoading] = useState(true)
-
-  // destructure methods from react-hook-form
-  const {register, handleSubmit, watch, formState, reset, control} = useForm<EditSoftwareItem>({
-    mode: 'onChange',
-    defaultValues: {
-      ...editSoftware
-    }
-  })
-  // destructure formState
-  const {isDirty, isValid} = formState
-  // form data provided by react-hook-form
+export default function SoftwareInformation({slug}: {slug: string}) {
+  const {token,user} = useSession()
+  const {software,loading,setSoftwareInfo,setLoading} = useSoftwareContext()
+  const {editSoftware} = useSoftwareToEdit({slug, token})
+  const {
+    register, watch, formState, reset
+  } = useFormContext<EditSoftwareItem>()
+  // destructure formState (subscribe to changes)
+  const {dirtyFields} = formState
+  // watch form data changes (we use reset in useEffect)
   const formData = watch()
-  // watch for unsaved changes
-  useOnUnsaveChange({
-    isDirty,
-    isValid,
-    warning: app.unsavedChangesMessage
-  })
 
+  // load form and set copy of software state
   useEffect(() => {
-    if (editSoftware?.id && apiLoading === false) {
+    if (editSoftware?.id && loading === true) {
       // set data into form
       reset(editSoftware)
-      // share with other steps
-      dispatchPageState({
-        type: EditSoftwareActionType.UPDATE_STATE,
-        payload: {
-          software: {
-            slug,
-            id: editSoftware?.id ?? '',
-            brand_name: editSoftware?.brand_name ?? ''
-          },
-          loading:false
-        }
+      setSoftwareInfo({
+        id: editSoftware.id,
+        slug: editSoftware.slug,
+        brand_name: editSoftware.brand_name,
+        concept_doi: editSoftware.concept_doi,
       })
       setLoading(false)
     }
-  },[reset,editSoftware,apiLoading,slug,dispatchPageState])
+  }, [
+    reset, editSoftware, loading,
+    setSoftwareInfo, setLoading
+  ])
 
-  useEffect(() => {
-    // update form state
-    // only if values are different (avoid loop)
-    if (
-      pageState?.isDirty !== isDirty ||
-      pageState?.isValid !== isValid
-    ) {
-      dispatchPageState({
-        type: EditSoftwareActionType.UPDATE_STATE,
-        payload: {
-          isDirty,
-          isValid,
-        }
-      })
-    }
-  },[isDirty,isValid,pageState,dispatchPageState])
+  // console.group('SoftwareInformation')
+  // console.log('isDirty...', isDirty)
+  // console.log('isValid...', isValid)
+  // console.log('pageState...', pageState)
+  // console.groupEnd()
 
   // if loading show loader
   if (loading) return (
     <ContentLoader />
   )
 
-  async function onSubmit(formData: EditSoftwareItem) {
-    const resp = await updateSoftwareInfo({
-      software: formData,
-      tagsInDb: editSoftware?.tags || [],
-      licensesInDb: editSoftware?.licenses || [],
-      repositoryInDb: editSoftware?.repository_url ?? null,
-      token
-    })
-    // if OK
-    if (resp.status === 200) {
-      showSuccessMessage(`${formData?.brand_name} saved`)
-      // update software state
-      // to be equal to data in the form
-      setEditSoftware(formData)
-      dispatchPageState({
-        type: EditSoftwareActionType.SET_SOFTWARE_INFO,
-        payload: {
-          id: formData?.id,
-          slug,
-          brand_name:formData?.brand_name
-        }
-      })
-    } else {
-      showErrorMessage(`Failed to save. ${resp.message}`)
-    }
-  }
-
   return (
     <form
-      id={pageState.step?.formId}
-      onSubmit={handleSubmit(onSubmit)}
+      data-testid="software-information-form"
+      id="software-information"
+      // onSubmit={handleSubmit(onSubmit)}
       className='flex-1'>
       {/* hidden inputs */}
       <input type="hidden"
-        {...register('id',{required:'id is required'})}
+        {...register('id', {required:'id is required'})}
       />
-      <input type="hidden"
-        {...register('slug',{required:'slug is required'})}
-      />
-      <EditSoftwareSection className='xl:grid xl:grid-cols-[3fr,1fr] xl:px-0 xl:gap-[3rem]'>
-        <div className="py-4 xl:pl-[3rem]">
+      <EditSection className='xl:grid xl:grid-cols-[3fr,1fr] xl:px-0 xl:gap-[3rem]'>
+        <div className="py-4 xl:pl-[3rem] overflow-hidden">
           <EditSectionTitle
             title="Software information"
           />
-          <ControlledTextField
+          {user?.role === 'rsd_admin' ?
+            <>
+              <div className="py-2"></div>
+              <AutosaveSoftwareTextField
+                software_id={formData.id}
+                options={{
+                  name: 'slug',
+                  label: config.slug.label,
+                  useNull: true,
+                  defaultValue: software?.slug,
+                  helperTextMessage: config.slug.help,
+                  helperTextCnt: `${editSoftware?.slug?.length || 0}/${config.slug.validation.maxLength.value}`,
+                }}
+                rules={config.slug.validation}
+              />
+            </>
+            :
+            <input type="hidden"
+              {...register('slug', {required:'slug is required'})}
+            />
+          }
+          <div className="py-2"></div>
+          <AutosaveSoftwareTextField
+            software_id={formData.id}
             options={{
               name: 'brand_name',
               label: config.brand_name.label,
@@ -138,31 +117,30 @@ export default function SoftwareInformation({slug,token}:{slug:string,token: str
               helperTextMessage: config.brand_name.help,
               helperTextCnt: `${formData?.brand_name?.length || 0}/${config.brand_name.validation.maxLength.value}`,
             }}
-            control={control}
             rules={config.brand_name.validation}
           />
           <div className="py-2"></div>
-          <ControlledTextField
+          <AutosaveSoftwareTextField
+            software_id={formData.id}
             options={{
               name: 'short_statement',
               label: config.short_statement.label,
-              multiline:true,
-              maxRows:5,
+              multiline: true,
+              maxRows: 5,
               useNull: true,
               defaultValue: editSoftware?.short_statement,
               helperTextMessage: config.short_statement.help,
               helperTextCnt: `${formData?.short_statement?.length || 0}/${config.short_statement.validation.maxLength.value}`,
             }}
-            control={control}
             rules={config.short_statement.validation}
           />
-
           <div className="py-2"></div>
           <EditSectionTitle
-            title='Project URL'
-            subtitle='Where users can find the information to start?'
+            title='Software URLs'
+            subtitle='Where can users find information to start?'
           />
-          <ControlledTextField
+          <AutosaveSoftwareTextField
+            software_id={formData.id}
             options={{
               name: 'get_started_url',
               label: config.get_started_url.label,
@@ -171,74 +149,36 @@ export default function SoftwareInformation({slug,token}:{slug:string,token: str
               helperTextMessage: config.get_started_url.help,
               helperTextCnt: `${formData?.get_started_url?.length || 0}/${config.get_started_url.validation.maxLength.value}`,
             }}
-            control={control}
             rules={config.get_started_url.validation}
           />
           <div className="py-2"></div>
-          <ControlledTextField
-            options={{
-              name: 'repository_url',
-              label: config.repository_url.label,
-              useNull: true,
-              defaultValue: editSoftware?.repository_url,
-              helperTextMessage: config.repository_url.help,
-              helperTextCnt: `${formData?.repository_url?.length || 0}/${config.repository_url.validation.maxLength.value}`,
-            }}
-            control={control}
-            rules={config.repository_url.validation}
-          />
-
+          <AutosaveRepositoryUrl />
           <div className="py-2"></div>
-          <SoftwareMarkdown
-            control={control}
-            register={register}
-            config={config}
-            defaultDescriptionUrl={editSoftware?.description_url ?? null}
-            formData={formData}
-          />
-
+          <AutosaveSoftwareMarkdown />
           {/* add white space at the bottom */}
           <div className="xl:py-4"></div>
         </div>
         <div className="py-4 min-w-[21rem] xl:my-0">
-          <SoftwarePageStatus
-            formData={formData}
-            config={config}
-            control={control}
+          <AutosaveSoftwarePageStatus />
+          <div className="py-4"></div>
+          <AutosaveConceptDoi />
+          <div className="py-4"></div>
+          <AutosaveSoftwareLogo />
+          <div className="py-4"></div>
+          <AutosaveSoftwareKeywords
+            software_id={formData.id}
+            concept_doi={formData.concept_doi ?? undefined}
+            items={formData.keywords}
           />
           <div className="py-4"></div>
-          <EditSectionTitle
-            title="Citation"
+          <AutosaveSoftwareLicenses
+            items={formData.licenses}
+            concept_doi={formData.concept_doi ?? undefined}
           />
-          <ControlledTextField
-            options={{
-              name: 'concept_doi',
-              label: config.concept_doi.label,
-              useNull: true,
-              defaultValue: editSoftware?.concept_doi,
-              helperTextMessage: config.concept_doi.help,
-              helperTextCnt: `${formData?.concept_doi?.length || 0}/${config.concept_doi.validation.maxLength.value}`,
-            }}
-            control={control}
-            rules={config.concept_doi.validation}
-          />
-
-          <div className="py-4"></div>
-          <EditSectionTitle
-            title="Keywords"
-          />
-          <SoftwareKeywords control={control}/>
-
-          <div className="py-4"></div>
-          <EditSectionTitle
-            title="Licenses"
-            subtitle="What licenses do apply to your software?"
-          />
-          <SoftwareLicenses control={control} />
           {/* add white space at the bottom */}
           <div className="py-4"></div>
         </div>
-      </EditSoftwareSection>
+      </EditSection>
     </form>
   )
 }

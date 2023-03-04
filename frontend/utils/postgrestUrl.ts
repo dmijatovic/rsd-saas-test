@@ -1,94 +1,264 @@
-import {ParsedUrlQuery} from 'querystring'
+// SPDX-FileCopyrightText: 2021 - 2022 Dusan Mijatovic (dv4all)
+// SPDX-FileCopyrightText: 2021 - 2023 dv4all
+// SPDX-FileCopyrightText: 2023 Dusan Mijatovic (dv4all) (dv4all)
+//
+// SPDX-License-Identifier: Apache-2.0
 
-export type PostgrestParams={
-  baseUrl:string,
-  search?:string,
-  columns?:string[],
-  filters?:string[],
-  order?:string,
-  limit:number,
-  offset:number
+import {rowsPerPageOptions} from '~/config/pagination'
+
+type baseQueryStringProps = {
+  search?: string | null,
+  keywords?: string[] | null,
+  domains?: string[] | null,
+  prog_lang?: string[] | null,
+  order?: string,
+  limit?: number,
+  offset?: number
 }
 
-export function softwareUrl(props:PostgrestParams){
-  const {baseUrl,search,columns,filters,order,limit,offset} = props
-  let url = `${baseUrl}/software?`
-
-  if (columns){
-    url+=`select=${columns.join(',')}`
-  }
-
-  // filters need to be after select to
-  // add tag colum from tag table and
-  // define join
-  if(typeof filters !=='undefined'
-    && filters?.length > 0){
-    // add tag inner join
-    url+=',tag_for_software!inner(tag)'
-    // convert tags array to comma separated string
-    const tagsIn = filters?.map((item:string)=>`"${encodeURIComponent(item)}"`).join(',')
-    // add tag values to in statement
-    url+=`&tag_for_software.tag=in.(${tagsIn})`
-  }
-
-  // always filter for only published software!
-  url+='&is_published=eq.true'
-
-  if (search){
-    // search for term in brand_name and short_statement
-    // we use ilike (case INsensitive) and * to indicate partial string match
-    url+=`&or=(brand_name.ilike.*${search}*, short_statement.ilike.*${search}*))`
-  }
-
-  if (order){
-    url+=`&order=${order}`
-  }
-
-  // add limit and offset
-  url+=`&limit=${limit || 12}&offset=${offset || 0}`
-
-  return url
+export type PostgrestParams = baseQueryStringProps & {
+  baseUrl:string
 }
 
 type QueryParams={
-  query: ParsedUrlQuery
-  search?:any,
-  filter?:any,
-  page?:any,
-  rows?:any
+  // query: ParsedUrlQuery
+  search?:string
+  keywords?:string[]
+  domains?:string[],
+  prog_lang?:string[],
+  page?:number,
+  rows?:number
 }
 
 export function ssrSoftwareUrl(params:QueryParams){
-  const {search,filter,rows,page,query} = params
-  let url='/software?'
-  if (search){
-    url+=`search=${encodeURIComponent(search)}`
-  } else if (search===''){
-    //remove search query
-  } else if (query?.search){
-    url+=`search=${encodeURIComponent(query.search.toString())}`
+  const view = 'software'
+  const url = ssrUrl(params, view)
+  return url
+}
+
+export function ssrOrganisationUrl(params: QueryParams) {
+  const view = 'organisations'
+  const url = ssrUrl(params,view)
+  return url
+}
+
+export function ssrProjectsUrl(params: QueryParams) {
+  const view = 'projects'
+  const url = ssrUrl(params, view)
+  return url
+}
+
+type BuildUrlQueryProps = {
+  query: string
+  param: string
+  value: string[]|string|undefined
+}
+
+function buildUrlQuery({query, param, value}: BuildUrlQueryProps) {
+  // if there is no value we return "" for query=no query
+  if (typeof value === 'undefined' || value === '') return query
+
+  // handle string value
+  if (typeof value === 'string') {
+    if (query) {
+      query += `&${param}=${encodeURIComponent(value)}`
+    } else {
+      query = `${param}=${encodeURIComponent(value)}`
+    }
+  } else if (Array.isArray(value)===true && value?.length > 0) {
+    // arrays are stringified
+    if (query) {
+      query += `&${param}=${encodeURIComponent(JSON.stringify(value))}`
+    } else {
+      query = `${param}=${encodeURIComponent(JSON.stringify(value))}`
+    }
   }
-  if (filter){
-    url+=`&filter=${encodeURIComponent(filter)}`
-  } else if (filter===null){
-    // remove filter
-  } else if(query?.filter){
-    url+=`&filter=${encodeURIComponent(query?.filter.toString())}`
-  }
-  if (page || page===0){
-    url+=`&page=${page}`
-  } else if (query?.page){
-    url+=`&page=${query.page}`
+  // return build query
+  return query
+}
+
+
+function ssrUrl(params: QueryParams, view:string) {
+  const {search, keywords, domains, prog_lang, rows, page} = params
+  // console.log('ssrUrl...params...', params)
+  let url = `/${view}?`
+  let query = ''
+  // search
+  query = buildUrlQuery({
+    query,
+    param: 'search',
+    value: search
+  })
+  //keywords
+  query = buildUrlQuery({
+    query,
+    param: 'keywords',
+    value: keywords
+  })
+  // research domains
+  query = buildUrlQuery({
+    query,
+    param: 'domains',
+    value: domains
+  })
+  // programming languages
+  query = buildUrlQuery({
+    query,
+    param: 'prog_lang',
+    value: prog_lang
+  })
+  if (page || page === 0) {
+    url += `page=${page}`
   } else {
-    url+='&page=0'
+    // default
+    url += 'page=0'
   }
-  if (rows){
-    url+=`&rows=${rows}`
-  } else if (query?.rows){
-    url+=`&rows=${query?.rows}`
+  if (rows) {
+    url += `&rows=${rows}`
   } else {
-    url+='&rows=12'
+    url += '&rows=12'
+  }
+  // debugger
+  if (query!=='') {
+    return `${url}&${query}`
   }
   return url
 }
 
+/**
+ * Provides url params for postgrest api pagination
+ */
+export function paginationUrlParams({rows=12, page=0}:
+  {rows:number,page:number}) {
+  let params = ''
+
+  if (rows) {
+    params += `&limit=${rows}`
+  }
+  if (page) {
+    params += `&offset=${page * rows}`
+  }
+  return params
+}
+
+/**
+ * Provides basic url query string for postgrest endpoints
+ * @param '{keywords[], order, limit, offset}'
+ * @returns string
+ */
+export function baseQueryString(props: baseQueryStringProps) {
+  const {keywords, domains, prog_lang,order,limit,offset} = props
+  let query
+  // console.group('baseQueryString')
+  // console.log('keywords...', keywords)
+  // console.log('domains...', domains)
+  // console.log('prog_lang...', prog_lang)
+  // console.log('order...', order)
+  // console.log('limit...', limit)
+  // console.log('offset...', offset)
+  // filter on keywords using AND
+  if (typeof keywords !== 'undefined' &&
+    keywords !== null &&
+    typeof keywords === 'object') {
+    // sort and convert keywords array to comma separated string
+    // we need to sort because search is on ARRAY field in pgSql
+    // and all keywords should be present (AND).
+    // and it needs to be enclosed in {} uri encoded see
+    // https://postgrest.org/en/v9.0/api.html?highlight=filter#calling-functions-with-array-parameters
+    const keywordsAll = keywords.sort().map((item: string) => `"${encodeURIComponent(item)}"`).join(',')
+    // use cs. command to find
+    query = `keywords=cs.%7B${keywordsAll}%7D`
+  }
+  if (typeof domains !== 'undefined' &&
+    domains !== null &&
+    typeof domains === 'object') {
+    // sort and convert research domains array to comma separated string
+    // we need to sort because search is on ARRAY field in pgSql
+    const domainsAll = domains.sort().map((item: string) => `"${encodeURIComponent(item)}"`).join(',')
+    // use cs. command to find
+    if (query) {
+      query = `${query}&research_domain=cs.%7B${domainsAll}%7D`
+    } else {
+      query = `research_domain=cs.%7B${domainsAll}%7D`
+    }
+  }
+  if (typeof prog_lang !== 'undefined' &&
+    prog_lang !== null &&
+    typeof prog_lang === 'object') {
+    // sort and convert prog_lang array to comma separated string
+    // we need to sort because search is on ARRAY field in pgSql
+    // and all prog_lang should be present (AND).
+    // and it needs to be enclosed in {} uri encoded see
+    // https://postgrest.org/en/v9.0/api.html?highlight=filter#calling-functions-with-array-parameters
+    const languagesAll = prog_lang.sort().map((item: string) => `"${encodeURIComponent(item)}"`).join(',')
+    // use cs. command to find
+    if (query) {
+      query = `${query}&prog_lang=cs.%7B${languagesAll}%7D`
+    } else {
+      query = `prog_lang=cs.%7B${languagesAll}%7D`
+    }
+  }
+  // order
+  if (order) {
+    if (query) {
+      query += `&order=${order}`
+    } else {
+      query = `order=${order}`
+    }
+  }
+  // add limit and offset
+  if (query) {
+    query += `&limit=${limit || rowsPerPageOptions[0]}&offset=${offset || 0}`
+  } else {
+    query = `limit=${limit || rowsPerPageOptions[0]}&offset=${offset || 0}`
+  }
+  // console.log('query...', query)
+  // console.groupEnd()
+  return query
+}
+
+export function softwareListUrl(props: PostgrestParams) {
+  const {baseUrl, search, keywords} = props
+  let query = baseQueryString(props)
+
+  if (search) {
+    // console.log('softwareListUrl...keywords...', props.keywords)
+    const encodedSearch = encodeURIComponent(search)
+    query += `&or=(brand_name.ilike.*${encodedSearch}*,short_statement.ilike.*${encodedSearch}*`
+    // if keyword filter is not used we search in keywords_text too!
+    if (typeof keywords === 'undefined' || keywords === null) {
+      query += `,keywords_text.ilike.*${encodedSearch}*`
+    }
+    // close or clause
+    query += ')'
+  }
+
+  const url = `${baseUrl}/rpc/software_search?${query}`
+  // console.log('softwareListUrl...', url)
+  return url
+}
+
+
+export function projectListUrl(props: PostgrestParams) {
+  const {baseUrl, search, keywords, domains} = props
+  let query = baseQueryString(props)
+
+  if (search) {
+    const encodedSearch = encodeURIComponent(search)
+    query += `&or=(title.ilike.*${encodedSearch}*,subtitle.ilike.*${encodedSearch}*`
+    // if keyword filter is not applied we search in keyword_text too!
+    if (typeof keywords === 'undefined' || keywords === null) {
+      query += `,keywords_text.ilike.*${encodedSearch}*`
+    }
+    // if domains filter is not applied we search in research_domain_text too!
+    if (typeof domains === 'undefined' || domains === null) {
+      query += `,research_domain_text.ilike.*${encodedSearch}*`
+    }
+    // close or clause
+    query+=')'
+  }
+
+  const url = `${baseUrl}/rpc/project_search?${query}`
+  // console.log('projectListUrl...',url)
+  return url
+}

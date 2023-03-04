@@ -1,3 +1,8 @@
+// SPDX-FileCopyrightText: 2022 Dusan Mijatovic (dv4all)
+// SPDX-FileCopyrightText: 2022 dv4all
+//
+// SPDX-License-Identifier: Apache-2.0
+
 import {createContext, Dispatch, SetStateAction, useState, useContext, useEffect} from 'react'
 import verifyJwt, {decodeJwt} from './jwtUtils'
 import {IncomingMessage, OutgoingMessage} from 'http'
@@ -6,15 +11,19 @@ import logger from '../utils/logger'
 import {refreshSession} from './refreshSession'
 
 // refresh schedule margin 5min. before expiration time
-export const REFRESH_MARGIN = 5 * 60 * 1000
-
+// REFRESH_MARGIN_MSEC env variable is used for test purposes ONLY
+const testMargin = process.env.REFRESH_MARGIN_MSEC ? parseInt(process.env.REFRESH_MARGIN_MSEC) : undefined
+export const REFRESH_MARGIN = testMargin || 5 * 60 * 1000
+export type RsdRole = 'rsd_admin' | 'rsd_user'
 export type RsdUser = {
-  iss: 'rsd_auth',
-  role: 'rsd_user' | 'rsd_admin',
+  iss: 'rsd_auth'
+  role: RsdRole
   // expiration time
-  exp: number,
+  exp: number
   // uid
   account: string
+  // display name
+  name: string
 }
 
 export type Session = {
@@ -36,14 +45,19 @@ export const defaultSession:Session={
 
 export const initSession: AuthSession = {
   session: defaultSession,
-  setSession: ()=>defaultSession
+  setSession: () => defaultSession
 }
 
 const AuthContext = createContext(initSession)
 
 // AuthProvider used in _app to share session between all components
 export function AuthProvider(props: any) {
-  const [session, setSession] = useState(props?.session || defaultSession)
+  const [session, setSession] = useState(props?.session ?? defaultSession)
+
+  // console.group('AuthProvider')
+  // console.log('session...', session)
+  // console.log('props...', props)
+  // console.groupEnd()
 
   useEffect(() => {
     // schedule
@@ -66,7 +80,7 @@ export function AuthProvider(props: any) {
           // refresh token by sending current valid cookie
           refreshSession()
             .then(newSession => {
-              // console.log('newSession...', newSession)
+              // console.log('newSession.token...', newSession?.token)
               // update only if "valid" session
               if (newSession?.status === 'authenticated') {
                 setSession(newSession)
@@ -87,14 +101,20 @@ export function AuthProvider(props: any) {
       }
     }
   }, [session, setSession])
-  // console.group('AuthProvider')
-  // console.log('session...', session)
-  // console.groupEnd()
+
   return <AuthContext.Provider value={{session, setSession}} {...props}/>
 }
 
 // Auth hook to use in the components
 export const useAuth = () => useContext(AuthContext)
+
+// More specific session hook which destructures session
+export function useSession(){
+  const {session} = useContext(AuthContext)
+  return {
+    ...session
+  }
+}
 
 /**
  * Calculate expirition time from now in milliseconds

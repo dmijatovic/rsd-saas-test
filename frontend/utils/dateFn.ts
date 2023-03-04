@@ -1,3 +1,8 @@
+// SPDX-FileCopyrightText: 2022 Dusan Mijatovic (dv4all)
+// SPDX-FileCopyrightText: 2022 dv4all
+//
+// SPDX-License-Identifier: Apache-2.0
+
 import logger from './logger'
 
 export function daysDiff(date:Date):number|undefined{
@@ -28,8 +33,8 @@ export function olderThanXDays(lastDate:Date, xDays=7):boolean{
 }
 
 export function isoStrToDate(isoString:string):Date|null{
-  try{
-    if (isoString){
+  try {
+    if (isoString) {
       const newDate = new Date(isoString)
       return newDate
     }
@@ -77,7 +82,6 @@ export function getTimeAgoSince(since: Date, isoStringDate: string | null) {
     // convert to date
     const updated = isoStrToDate(isoStringDate)
     if (!updated) return null
-
     if (since > updated) {
       const msDiff = since.getTime() - updated.getTime()
       const hours = 1000 * 60 * 60
@@ -86,14 +90,18 @@ export function getTimeAgoSince(since: Date, isoStringDate: string | null) {
         const daysDiff = Math.floor(hoursDiff / 24)
         if (daysDiff > 30) {
           const monthDiff = Math.floor(daysDiff / 30)
+          if (monthDiff === 1) return `${monthDiff} month ago`
           return `${monthDiff} months ago`
-        }else if (daysDiff > 7) {
+        } else if (daysDiff > 7) {
           const weeksDiff = Math.floor(daysDiff / 7)
+          if (weeksDiff === 1) return `${weeksDiff} week ago`
           return `${weeksDiff} weeks ago`
         } else if (daysDiff > 1) return `${daysDiff} days ago`
         return '1 day ago'
       } else if (hoursDiff === 1) {
         return '1 hour ago'
+      } else if (hoursDiff === 0) {
+        return 'right now'
       } else {
         return `${hoursDiff} hours ago`
       }
@@ -102,6 +110,20 @@ export function getTimeAgoSince(since: Date, isoStringDate: string | null) {
     }
   } catch (e) {
     // on fail return nothing
+    return null
+  }
+}
+
+
+export function getMonthYearDate(date: string, locale = 'en-us') {
+  try {
+    const monthDate = new Date(date)
+    if (monthDate) {
+      // return only month and year in us
+      return monthDate.toLocaleDateString(locale, {year: 'numeric', month: 'short'})
+    }
+    return null
+  } catch (e:any) {
     return null
   }
 }

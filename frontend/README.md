@@ -1,3 +1,12 @@
+<!--
+SPDX-FileCopyrightText: 2021 - 2023 Dusan Mijatovic (dv4all)
+SPDX-FileCopyrightText: 2021 - 2023 dv4all
+SPDX-FileCopyrightText: 2022 Christian Meeßen (GFZ) <christian.meessen@gfz-potsdam.de>
+SPDX-FileCopyrightText: 2022 Helmholtz Centre Potsdam - GFZ German Research Centre for Geosciences
+
+SPDX-License-Identifier: CC-BY-4.0
+-->
+
 # Research Software Directory (RSD) - Frontend
 
 Based on the features in the legacy application and the current requirements we selected [NextJS](https://nextjs.org/docs) and MUI-5 (https://mui.com/getting-started/usage/) frameworks for:
@@ -8,27 +17,45 @@ Based on the features in the legacy application and the current requirements we 
 
 ## Development
 
+### Locally running frontend in dev mode
+
 - intall dependencies `yarn install`
-- create env.local and env.production.local file. Use env.local.example as template.
+- create `.env.local` file. Use `.env.example` from the project root as template.
 - run all app modules `docker-compose up`
-- open another terminal and run `yarn dev` to start application in development mode
+- open another terminal and run `yarn dev` to start frontend in development mode
+
+### Frontend dev mode via Docker
+
+**Use this if you are using a custom theme and mount files from the `/deployment` directory**
+
+You can start the frontend in dev mode inside Docker using the `Makefile`. The command will make sure that the created Docker container uses a user with the same user id and group id as your local account. This ensures that you will be the owner of all files that are written via mounted volumes to your drive (mainly everything in the `frontend/.next` and `frontend/node_modules` folders).
+
+```bash
+make frontend-docker
+```
+
+Alternatively you can run
+
+```bash
+# Export your user and group ids to the variables so Docker will correctly build the frontend-dev container. This is required only if you build the container
+export DUID=$(id -u)
+export DGID=$(id -g)
+docker-compose build frontend-dev
+docker-compose up --scale frontend=0 --scale frontend-dev=1 --scale scrapers=0
+```
 
 ### Environment variables
 
-For oAuth implementation we need env variables. Copy env.local.example file to `env.local` and provide values required for next-auth module. In addition we use few public env variables that exposed to the browser. These values are stored in .env file. See [next documentation page for more info](https://nextjs.org/docs/basic-features/environment-variables).
+For oAuth implementation we need env variables. From the project root directory, copy `.env.example` file to `frontend/.env.local` and provide the values See [next documentation page for more info](https://nextjs.org/docs/basic-features/environment-variables).
 
-- `env` file contains public env variables. If different values are required for production create env.production file
-- `env.development` development specific values, when running frontend using `yarn dev`.
-- `env.local` contains secrets when running frontend in local development (yarn dev). This file is not in the repo. You will need to create it and add secrets to it.
-- `env.local.example` this is example file. copy to env.local for local development and env.production.local
-- `env.production.local` file is used when running frontend with docker compose `docker-compose up`.
+- `.env.local` contains secrets when running frontend in local development (yarn dev). This file is not in the repo. You will need to create it and add secrets to it. There is one difference from basic .env file.
 
-## Docker compose frontend only
-
-Use `docker-compose up` to run solution in Docker container. The solution is avaliable at http://localhost:3000
-To rebuild the image run `docker-compose up --build`.
-
-The image version is defined in docker-compose.yml file. When you inrease version number in the docker-compose.yml file new build will triggered even if you run `docker-compose up` without build flag. Please keep the version numbers in `package.json` and in `docker-compose.yml` the same. At this point this requires manual change at both file, later we should look for the ways to automate it in the CI/CD pipelines.
+```env
+# postgREST api
+# cosumed by services: authentication,frontend,auth-tests
+# .env.local: http://localhost/api/v1, .env.production.local: http://backend:3500
+POSTGREST_URL=http://localhost/api/v1
+```
 
 ## Folders
 
@@ -78,26 +105,32 @@ The integration is based on [this article](https://medium.com/@akarX23/a-full-se
 
 ## Authentication
 
-For authentication we use `next-auth`. For more information see [official documentation](https://next-auth.js.org/getting-started/example).
+For authentication we use custom module which integrates with our auth service. The frontend code is in `frontend/auth` folder and the auth service is in `authentication` folder.
 
 ## Unit testing
 
-For unit testing we use [react testing library](https://testing-library.com/docs/react-testing-library/intro/).
+For unit testing we use [jest](https://jestjs.io/docs/getting-started) and [react testing library](https://testing-library.com/docs/react-testing-library/intro/).
 There are several practices that the React Testing Library promotes:
 
 - Avoid testing internal component state
 - Testing how a component renders
 
-The setup is performed according to [official Next documentation](https://nextjs.org/docs/testing#jest-and-react-testing-library)
+The setup is performed according to [official Next documentation](https://nextjs.org/docs/testing#setting-up-jest-with-the-rust-compiler). We use rust compiler instead of babel setup.
+
+### Unit testing scripts
+
+- `yarn test:watch`: to run test in watch mode. The tests will be runned on each change in the test/component file(s)
+- `yarn test:coverage`: to run tests and show the test coverage report. This script is used in GH action.
+- `yarn test:memlimit`: for minimal memory consumption. When basic test scripts **yarn test** and **yarn test:coverage** causing the memory overflow on your machine use this script to limit the number of concurrent workers and memory usage.
+- `yarn test:memory`: for examining memory usage during the tests. In node version 18 (and 16) some changes are made in V8 engine memory management that cause the memory leaks when running tests with Jest. See [issue](https://github.com/facebook/jest/issues/11956)
 
 ### Setup steps performed
 
 ```bash
 # install dependencies
-npm install --save-dev jest @testing-library/react @testing-library/jest-dom react-test-renderer
-# install jest-fetch-mock support fetch in Jest (node environment not browser)
-# and whatwg-fetch to address next-auth fetch requests on node js (node-fetch)
-npm i -D jest-fetch-mock whatwg-fetch
+yarn add -D jest jest-environment-jsdom @testing-library/react @testing-library/jest-dom
+# install whatwg-fetch to address next-auth fetch requests on node js (node-fetch)
+yarn add -D whatwg-fetch
 
 ```
 
@@ -111,12 +144,6 @@ import "whatwg-fetch";
 // specific
 import "@testing-library/jest-dom/extend-expect";
 ```
-
-### Fetch mock
-
-I tried to use fetch mock. More [info about setup here](https://frontend-digest.com/testing-getserversideprops-in-nextjs-b339ebcf3401).
-
-**The fetch mock library does not integrate well with next-auth. When enabled it causes error in session provider of next-auth. Further investigation is required.**
 
 ## NextJS
 
@@ -138,3 +165,41 @@ To learn more about Next.js, take a look at the following resources:
 - [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+
+## Major version updates
+
+Upgrading minor version changes can be usally done using `yarn outdated` and `yarn upgrade`. Major updates are more demanding and might require changes in the source code.
+
+Since RSD went live in August 2022 we started using exact versions in the package.json to avoid unexpected upgrades. This means that we manually check for outdated packages and perform "controlled" upgrades. At the same time we perfom security audits using `yarn audit`.
+
+### Next and React
+
+```bash
+# upgrade next, react and typescript
+yarn add next@latest react@latest react-dom@latest eslint-config-next@latest typescript
+# upgrade types
+yarn add -D @types/node @types/react @types/react-dom
+```
+
+### Material UI
+
+```bash
+# upgrade material ui
+yarn add @mui/material @mui/icons-material @emotion/react @emotion/server @emotion/styled
+```
+
+### Testing
+
+```bash
+# react testing lib
+yarn add -D @testing-library/react @testing-library/jest-dom jest jest-environment-jsdom @types/jest
+```
+
+### Others
+
+```bash
+# cookie for tokens
+yarn add cookie
+# type
+yarn add -D @types/cookie
+```

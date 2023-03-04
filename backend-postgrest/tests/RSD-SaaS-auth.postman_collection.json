@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "37d981a4-d5ef-4bbd-9eb8-b46165fe8452",
+		"_postman_id": "cac10210-f65f-4bcd-a437-cfad2270c9b2",
 		"name": "RSD-SaaS-auth",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -90,6 +90,130 @@
 			"response": []
 		},
 		{
+			"name": "post login_for_account admin",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 201\", function () {",
+							"\tpm.response.to.have.status(201);",
+							"});",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"account\": \"{{account_id}}\",\n    \"provider\": \"my_provider\",\n    \"sub\": \"sub\"\n}\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{backend_url}}/login_for_account",
+					"host": [
+						"{{backend_url}}"
+					],
+					"path": [
+						"login_for_account"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "post login_for_account 2 admin",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 201\", function () {",
+							"\tpm.response.to.have.status(201);",
+							"});",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"account\": \"{{account_id_2}}\",\n    \"provider\": \"my_provider\",\n    \"sub\": \"sub2\"\n}\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{backend_url}}/login_for_account",
+					"host": [
+						"{{backend_url}}"
+					],
+					"path": [
+						"login_for_account"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get user agreement false",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Body matches string\", function () {",
+							"    pm.expect(pm.response.text()).to.equal(\"false\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"account_id\": \"{{account_id}}\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{backend_url}}/rpc/user_agreements_stored",
+					"host": [
+						"{{backend_url}}"
+					],
+					"path": [
+						"rpc",
+						"user_agreements_stored"
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "post software anonymous",
 			"event": [
 				{
@@ -166,7 +290,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "[\n\t{\n\t\t\"slug\": \"test-slug1\",\n\t\t\"brand_name\": \"Test software 1\",\n\t\t\"get_started_url\": \"\",\n\t\t\"is_featured\": false,\n\t\t\"is_published\": true,\n\t\t\"short_statement\": \"Test software for testing\"\n\t},\n\t{\n\t\t\"slug\": \"test-slug2\",\n\t\t\"brand_name\": \"Test software 2\",\n\t\t\"get_started_url\": \"\",\n\t\t\"is_featured\": false,\n\t\t\"is_published\": true,\n\t\t\"short_statement\": \"Test software for testing\"\n\t},\n\t{\n\t\t\"slug\": \"test-slug3\",\n\t\t\"brand_name\": \"Test software 3\",\n\t\t\"get_started_url\": \"\",\n\t\t\"is_featured\": false,\n\t\t\"is_published\": true,\n\t\t\"short_statement\": \"Test software for testing\"\n\t},\n\t{\n\t\t\"slug\": \"test-slug-unpublished\",\n\t\t\"brand_name\": \"Test software unpublished\",\n\t\t\"get_started_url\": \"\",\n\t\t\"is_featured\": false,\n\t\t\"is_published\": false,\n\t\t\"short_statement\": \"Test software for testing\"\n\t}\n]",
+					"raw": "[\n\t{\n\t\t\"slug\": \"test-slug1\",\n\t\t\"brand_name\": \"Test software 1\",\n\t\t\"get_started_url\": \"https://www.example.com\",\n\t\t\"is_published\": true,\n\t\t\"short_statement\": \"Test software for testing\"\n\t},\n\t{\n\t\t\"slug\": \"test-slug2\",\n\t\t\"brand_name\": \"Test software 2\",\n\t\t\"get_started_url\": null,\n\t\t\"is_published\": true,\n\t\t\"short_statement\": \"Test software for testing\"\n\t},\n\t{\n\t\t\"slug\": \"test-slug3\",\n\t\t\"brand_name\": \"Test software 3\",\n\t\t\"get_started_url\": null,\n\t\t\"is_published\": true,\n\t\t\"short_statement\": \"Test software for testing\"\n\t},\n\t{\n\t\t\"slug\": \"test-slug-unpublished\",\n\t\t\"brand_name\": \"Test software unpublished\",\n\t\t\"get_started_url\": null,\n\t\t\"is_published\": false,\n\t\t\"short_statement\": \"Test software for testing\"\n\t}\n]",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -180,6 +304,215 @@
 					],
 					"path": [
 						"software"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "post software user not agreed ToS",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 400\", function () {",
+							"\tpm.response.to.have.status(400);",
+							"});",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {}
+			},
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{jwt_user}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"slug\": \"test-slug-user\",\n\t\"brand_name\": \"Test software user\",\n\t\"is_published\": true,\n\t\"short_statement\": \"Test software for testing\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{backend_url}}/software",
+					"host": [
+						"{{backend_url}}"
+					],
+					"path": [
+						"software"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "patch user accept terms user",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"\tpm.response.to.have.status(200);",
+							"});",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{jwt_user}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"agree_terms\": true,\n    \"notice_privacy_statement\": true\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{backend_url}}/account?id=eq.{{account_id}}",
+					"host": [
+						"{{backend_url}}"
+					],
+					"path": [
+						"account"
+					],
+					"query": [
+						{
+							"key": "id",
+							"value": "eq.{{account_id}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "patch user accept terms user 2",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"\tpm.response.to.have.status(200);",
+							"});",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{jwt_user_2}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"agree_terms\": true,\n    \"notice_privacy_statement\": true\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{backend_url}}/account?id=eq.{{account_id_2}}",
+					"host": [
+						"{{backend_url}}"
+					],
+					"path": [
+						"account"
+					],
+					"query": [
+						{
+							"key": "id",
+							"value": "eq.{{account_id_2}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get user agreement true",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Body matches string\", function () {",
+							"    pm.expect(pm.response.text()).to.equal(\"true\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"account_id\": \"{{account_id}}\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{backend_url}}/rpc/user_agreements_stored",
+					"host": [
+						"{{backend_url}}"
+					],
+					"path": [
+						"rpc",
+						"user_agreements_stored"
 					]
 				}
 			},
@@ -220,7 +553,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n\t\"slug\": \"test-slug-user\",\n\t\"brand_name\": \"Test software user\",\n\t\"get_started_url\": \"\",\n\t\"is_featured\": false,\n\t\"is_published\": true,\n\t\"short_statement\": \"Test software for testing\"\n}",
+					"raw": "{\n\t\"slug\": \"test-slug-user\",\n\t\"brand_name\": \"Test software user\",\n\t\"is_published\": true,\n\t\"short_statement\": \"Test software for testing\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -274,7 +607,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n\t\"slug\": \"test-slug-user-2\",\n\t\"brand_name\": \"Test software user\",\n\t\"get_started_url\": \"\",\n\t\"is_featured\": false,\n\t\"is_published\": true,\n\t\"short_statement\": \"Test software for testing\"\n}",
+					"raw": "{\n\t\"slug\": \"test-slug-user-2\",\n\t\"brand_name\": \"Test software user\",\n\t\"is_published\": true,\n\t\"short_statement\": \"Test software for testing\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -915,7 +1248,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n\t\"slug\": \"project-user-1\",\n\t\"is_published\": true\n}",
+					"raw": "{\n\t\"slug\": \"project-user-1\",\n\t\"is_published\": true,\n\t\"title\": \"Project 1\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -1004,7 +1337,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n\t\"name\" : \"eScience Center\",\n\t\"slug\" : \"nlesc\",\n\t\"primary_maintainer\" : \"{{account_id}}\"\n}",
+					"raw": "{\n\t\"name\" : \"eScience Center\",\n\t\"slug\" : \"nlesc\",\n\t\"website\": \"https://www.esciencecenter.nl/\",\n\t\"primary_maintainer\" : \"{{account_id}}\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -1018,6 +1351,55 @@
 					],
 					"path": [
 						"organisation"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "post maintainer of organisation wrong",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 403\", function () {",
+							"\tpm.response.to.have.status(403);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{jwt_user_2}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"maintainer\" : \"{{account_id_2}}\",\n\t\"organisation\" : \"{{organisation_id_1}}\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{backend_url}}/maintainer_for_organisation",
+					"host": [
+						"{{backend_url}}"
+					],
+					"path": [
+						"maintainer_for_organisation"
 					]
 				}
 			},
@@ -1102,7 +1484,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n\t\"software\" : \"{{software_id_1}}\",\n\t\"organisation\" : \"{{organisation_id_1}}\",\n\t\"status\" : \"requested_by_origin\"\n}",
+					"raw": "{\n\t\"software\" : \"{{software_id_1}}\",\n\t\"organisation\" : \"{{organisation_id_1}}\",\n\t\"status\" : \"rejected_by_origin\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -1165,6 +1547,576 @@
 					],
 					"path": [
 						"software_for_organisation"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "patch software organisation relation reject status correct",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"\tpm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{jwt_user}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"status\" : \"rejected_by_origin\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{backend_url}}/software_for_organisation?software=eq.{{software_id_1}}&organisation=eq.{{organisation_id_1}}",
+					"host": [
+						"{{backend_url}}"
+					],
+					"path": [
+						"software_for_organisation"
+					],
+					"query": [
+						{
+							"key": "software",
+							"value": "eq.{{software_id_1}}"
+						},
+						{
+							"key": "organisation",
+							"value": "eq.{{organisation_id_1}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "patch software organisation relation rejected status wrong",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 400\", function () {",
+							"\tpm.response.to.have.status(400);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{jwt_user}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"status\" : \"rejected_by_relation\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{backend_url}}/software_for_organisation?software=eq.{{software_id_1}}&organisation=eq.{{organisation_id_1}}",
+					"host": [
+						"{{backend_url}}"
+					],
+					"path": [
+						"software_for_organisation"
+					],
+					"query": [
+						{
+							"key": "software",
+							"value": "eq.{{software_id_1}}"
+						},
+						{
+							"key": "organisation",
+							"value": "eq.{{organisation_id_1}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "patch software organisation relation approve status correct",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"\tpm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{jwt_user}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"status\" : \"approved\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{backend_url}}/software_for_organisation?software=eq.{{software_id_1}}&organisation=eq.{{organisation_id_1}}",
+					"host": [
+						"{{backend_url}}"
+					],
+					"path": [
+						"software_for_organisation"
+					],
+					"query": [
+						{
+							"key": "software",
+							"value": "eq.{{software_id_1}}"
+						},
+						{
+							"key": "organisation",
+							"value": "eq.{{organisation_id_1}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "patch software organisation relation rejected status correct 2",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"\tpm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{jwt_user}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"status\" : \"rejected_by_relation\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{backend_url}}/software_for_organisation?software=eq.{{software_id_1}}&organisation=eq.{{organisation_id_1}}",
+					"host": [
+						"{{backend_url}}"
+					],
+					"path": [
+						"software_for_organisation"
+					],
+					"query": [
+						{
+							"key": "software",
+							"value": "eq.{{software_id_1}}"
+						},
+						{
+							"key": "organisation",
+							"value": "eq.{{organisation_id_1}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "patch software organisation relation rejected status wrong 2",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 400\", function () {",
+							"\tpm.response.to.have.status(400);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{jwt_user}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"status\" : \"rejected_by_origin\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{backend_url}}/software_for_organisation?software=eq.{{software_id_1}}&organisation=eq.{{organisation_id_1}}",
+					"host": [
+						"{{backend_url}}"
+					],
+					"path": [
+						"software_for_organisation"
+					],
+					"query": [
+						{
+							"key": "software",
+							"value": "eq.{{software_id_1}}"
+						},
+						{
+							"key": "organisation",
+							"value": "eq.{{organisation_id_1}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "post software organisation is_featured wrong",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 403\", function () {",
+							"\tpm.response.to.have.status(403);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{jwt_user_2}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"software\" : \"{{software_id_2}}\",\n\t\"organisation\" : \"{{organisation_id_1}}\",\n\t\"status\" : \"approved\",\n\t\"is_featured\": true\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{backend_url}}/software_for_organisation",
+					"host": [
+						"{{backend_url}}"
+					],
+					"path": [
+						"software_for_organisation"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "post software organisation is_featured correct",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 201\", function () {",
+							"\tpm.response.to.have.status(201);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{jwt_user_2}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"software\" : \"{{software_id_2}}\",\n\t\"organisation\" : \"{{organisation_id_1}}\",\n\t\"status\" : \"approved\",\n\t\"is_featured\": false\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{backend_url}}/software_for_organisation",
+					"host": [
+						"{{backend_url}}"
+					],
+					"path": [
+						"software_for_organisation"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "patch software organisation relation is_featured wrong",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 400\", function () {",
+							"\tpm.response.to.have.status(400);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{jwt_user_2}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"is_featured\" : true\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{backend_url}}/software_for_organisation?software=eq.{{software_id_2}}&organisation=eq.{{organisation_id_1}}",
+					"host": [
+						"{{backend_url}}"
+					],
+					"path": [
+						"software_for_organisation"
+					],
+					"query": [
+						{
+							"key": "software",
+							"value": "eq.{{software_id_2}}"
+						},
+						{
+							"key": "organisation",
+							"value": "eq.{{organisation_id_1}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "patch software organisation relation relation rejected wrong",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 400\", function () {",
+							"\tpm.response.to.have.status(400);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{jwt_user_2}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"status\" : \"rejected_by_relation\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{backend_url}}/software_for_organisation?software=eq.{{software_id_2}}&organisation=eq.{{organisation_id_1}}",
+					"host": [
+						"{{backend_url}}"
+					],
+					"path": [
+						"software_for_organisation"
+					],
+					"query": [
+						{
+							"key": "software",
+							"value": "eq.{{software_id_2}}"
+						},
+						{
+							"key": "organisation",
+							"value": "eq.{{organisation_id_1}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "patch software organisation relation relation rejected correct 3",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"\tpm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{jwt_user_2}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"status\" : \"rejected_by_origin\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{backend_url}}/software_for_organisation?software=eq.{{software_id_2}}&organisation=eq.{{organisation_id_1}}",
+					"host": [
+						"{{backend_url}}"
+					],
+					"path": [
+						"software_for_organisation"
+					],
+					"query": [
+						{
+							"key": "software",
+							"value": "eq.{{software_id_2}}"
+						},
+						{
+							"key": "organisation",
+							"value": "eq.{{organisation_id_1}}"
+						}
 					]
 				}
 			},
@@ -1534,6 +2486,44 @@
 					],
 					"path": [
 						"software"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "delete all login_for_account admin",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"\tpm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Check size deleted accounts\", function () {",
+							"\tconst jsonData = pm.response.json();",
+							"\tpm.expect(jsonData.length).to.be.above(0);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {}
+			},
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{backend_url}}/login_for_account",
+					"host": [
+						"{{backend_url}}"
+					],
+					"path": [
+						"login_for_account"
 					]
 				}
 			},

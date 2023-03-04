@@ -1,21 +1,30 @@
-import type {NextApiRequest} from 'next'
+// SPDX-FileCopyrightText: 2021 - 2022 Dusan Mijatovic (dv4all)
+// SPDX-FileCopyrightText: 2021 - 2023 dv4all
+// SPDX-FileCopyrightText: 2023 Dusan Mijatovic (dv4all) (dv4all)
+//
+// SPDX-License-Identifier: Apache-2.0
+
+import {ParsedUrlQuery} from 'querystring'
 import logger from './logger'
 
-export function extractQueryParam({req,param,castToType='string',defaultValue}:{
-  req:NextApiRequest, param:string, castToType?:('string'|'number'|'date'),
+export function extractQueryParam({query,param,castToType='string',defaultValue}:{
+  query: ParsedUrlQuery, param: string, castToType?: ('string' | 'number' | 'json-encoded'),
   defaultValue:any
 }){
   try{
-    if (req?.query && req.query.hasOwnProperty(param)){
-      const rawVal = req.query[param]
+    if (query && query.hasOwnProperty(param)){
+      const rawVal = query[param]
+      if (typeof rawVal == 'undefined') return defaultValue
       switch (castToType){
-      case 'number':
-        return parseInt(rawVal?.toString())
-      case 'date':
-        return new Date(rawVal?.toString())
-      case 'string':
-      default:
-        return rawVal?.toString()
+        case 'number':
+          return parseInt(rawVal?.toString())
+        case 'string':
+          return rawVal?.toString()
+        case 'json-encoded':
+          const json = JSON.parse(decodeURI(rawVal.toString()))
+          return json
+        default:
+          return rawVal
       }
     }else{
     // return default value
@@ -27,32 +36,111 @@ export function extractQueryParam({req,param,castToType='string',defaultValue}:{
     throw e
   }}
 
-export function ssrSoftwareParams(context:NextApiRequest){
+export function ssrSoftwareParams(query: ParsedUrlQuery) {
+  // console.group('ssrSoftwareParams')
+  // console.log('query...', query)
+
   const rows = extractQueryParam({
-    req: context,
+    query,
     param: 'rows',
     defaultValue: 12,
     castToType:'number'
   })
   const page = extractQueryParam({
-    req: context,
+    query,
     param: 'page',
     defaultValue: 0,
     castToType:'number'
   })
   const search = extractQueryParam({
-    req: context,
+    query,
+    param: 'search',
+    defaultValue: null,
+    castToType:'string'
+  })
+  const keywords = extractQueryParam({
+    query,
+    param: 'keywords',
+    castToType: 'json-encoded',
+    defaultValue: null
+  })
+  const prog_lang = extractQueryParam({
+    query,
+    param: 'prog_lang',
+    castToType: 'json-encoded',
+    defaultValue: null
+  })
+  // console.log('keywords...', keywords)
+  // console.log('keywords...', typeof keywords)
+  // console.groupEnd()
+  return {
+    search,
+    keywords,
+    prog_lang,
+    rows,
+    page,
+  }
+}
+
+export function ssrProjectsParams(query: ParsedUrlQuery) {
+  const rows = extractQueryParam({
+    query,
+    param: 'rows',
+    defaultValue: 12,
+    castToType: 'number'
+  })
+  const page = extractQueryParam({
+    query,
+    param: 'page',
+    defaultValue: 0,
+    castToType: 'number'
+  })
+  const search = extractQueryParam({
+    query,
     param: 'search',
     defaultValue: null
   })
-  const filterStr = extractQueryParam({
-    req: context,
-    param: 'filter',
+  const keywords = extractQueryParam({
+    query,
+    param: 'keywords',
+    castToType: 'json-encoded',
+    defaultValue: null
+  })
+  const domains = extractQueryParam({
+    query,
+    param: 'domains',
+    castToType: 'json-encoded',
     defaultValue: null
   })
   return {
     search,
-    filterStr,
+    rows,
+    page,
+    keywords,
+    domains
+  }
+}
+
+export function ssrOrganisationParams(query: ParsedUrlQuery) {
+  const rows = extractQueryParam({
+    query,
+    param: 'rows',
+    defaultValue: 12,
+    castToType: 'number'
+  })
+  const page = extractQueryParam({
+    query,
+    param: 'page',
+    defaultValue: 0,
+    castToType: 'number'
+  })
+  const search = extractQueryParam({
+    query,
+    param: 'search',
+    defaultValue: null
+  })
+  return {
+    search,
     rows,
     page,
   }

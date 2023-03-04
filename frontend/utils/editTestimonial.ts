@@ -1,5 +1,10 @@
+// SPDX-FileCopyrightText: 2022 Dusan Mijatovic (dv4all)
+// SPDX-FileCopyrightText: 2022 dv4all
+//
+// SPDX-License-Identifier: Apache-2.0
+
 import {createJsonHeaders, extractReturnMessage} from './fetchHelpers'
-import {Testimonial} from '../types/Testimonial'
+import {NewTestimonial, Testimonial} from '../types/Testimonial'
 import logger from './logger'
 
 
@@ -36,7 +41,7 @@ export async function getTestimonialsForSoftware({software, frontend, token}:
   }
 }
 
-export async function postTestimonial({testimonial, token}: { testimonial: Testimonial, token: string }) {
+export async function postTestimonial({testimonial, token}: { testimonial: NewTestimonial, token: string }) {
   try {
     const url = '/api/v1/testimonial'
     const resp = await fetch(url, {
@@ -114,15 +119,6 @@ export async function patchTestimonialPositions({testimonials, token}: { testimo
     // execute them in parallel
     const responses = await Promise.all(requests)
     // check for errors
-    responses.map(resp => {
-      const msg = extractReturnMessage(resp)
-      if ([200, 201].includes(msg.status) === false) {
-        // maybe throw error here?
-        // return msg
-        throw new Error(msg?.message ?? 'Unknown error')
-      }
-    })
-    // or first response
     return extractReturnMessage(responses[0])
   } catch (e: any) {
     logger(`patchTestimonial: ${e?.message}`, 'error')

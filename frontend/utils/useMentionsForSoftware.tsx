@@ -1,5 +1,10 @@
+// SPDX-FileCopyrightText: 2022 Dusan Mijatovic (dv4all)
+// SPDX-FileCopyrightText: 2022 dv4all
+//
+// SPDX-License-Identifier: Apache-2.0
+
 import {useEffect, useState} from 'react'
-import {MentionForSoftware} from '../types/MentionType'
+import {MentionForSoftware} from '../types/Mention'
 
 import {getMentionsForSoftware} from './editMentions'
 

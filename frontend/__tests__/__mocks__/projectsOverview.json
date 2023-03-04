@@ -1,0 +1,158 @@
+[
+  {
+    "id": "d8d60d90-589f-4dbb-8d6f-a7d796d7594c",
+    "slug": "test-project",
+    "title": "Test project",
+    "subtitle": "This is test project",
+    "current_state": "Starting",
+    "date_start": null,
+    "updated_at": "2022-07-26T15:54:34.659439+00:00",
+    "is_published": true,
+    "image_id": "d8d60d90-589f-4dbb-8d6f-a7d796d7594c",
+    "keywords": null
+  },
+  {
+    "id": "4b3d933a-60c5-4746-b5ca-0bcbc3586a30",
+    "slug": "bakeoff",
+    "title": "Facilitating the \"Great Bake Off\" of Bioinformatics Workflows",
+    "subtitle": " ",
+    "current_state": "Running",
+    "date_start": "2022-07-01",
+    "updated_at": "2022-07-26T14:57:12.747524+00:00",
+    "is_published": true,
+    "image_id": "4b3d933a-60c5-4746-b5ca-0bcbc3586a30",
+    "keywords": [
+      "Inter-operability & linked data",
+      "Workflow technologies"
+    ]
+  },
+  {
+    "id": "474931a8-fcc5-4b66-aec0-39020ecd07a2",
+    "slug": "microbialgenes",
+    "title": "A community-supported workflow connecting microbial genes, and organisms to their molecular products",
+    "subtitle": " ",
+    "current_state": "Running",
+    "date_start": "2022-03-01",
+    "updated_at": "2022-07-26T14:57:12.747524+00:00",
+    "is_published": true,
+    "image_id": "474931a8-fcc5-4b66-aec0-39020ecd07a2",
+    "keywords": [
+      "High performance computing",
+      "Inter-operability & linked data"
+    ]
+  },
+  {
+    "id": "226dbd2a-ded2-4c24-9177-c1b1cd4b96d8",
+    "slug": "emg",
+    "title": "Development of a software tool for automated surface EMG analysis of respiratory muscles during mechanical ventilation",
+    "subtitle": " ",
+    "current_state": "Running",
+    "date_start": "2022-03-01",
+    "updated_at": "2022-07-26T14:57:12.747524+00:00",
+    "is_published": true,
+    "image_id": "226dbd2a-ded2-4c24-9177-c1b1cd4b96d8",
+    "keywords": [
+      "Machine learning",
+      "Real time data analysis"
+    ]
+  },
+  {
+    "id": "9820bc87-b8a9-49e9-9d9d-3054fab5b1c5",
+    "slug": "3dvac",
+    "title": "Personalized cancer vaccine design through 3D modelling boosted geometric learning",
+    "subtitle": " ",
+    "current_state": "Running",
+    "date_start": "2022-03-01",
+    "updated_at": "2022-07-26T14:57:12.747524+00:00",
+    "is_published": true,
+    "image_id": "9820bc87-b8a9-49e9-9d9d-3054fab5b1c5",
+    "keywords": [
+      "High performance computing",
+      "Machine learning"
+    ]
+  },
+  {
+    "id": "4bb2e4b3-04dc-48d6-975d-e51f23fdb06f",
+    "slug": "demoses",
+    "title": "DEMOSES",
+    "subtitle": "Designing and modelling future systems of energy systems",
+    "current_state": "Running",
+    "date_start": "2022-02-01",
+    "updated_at": "2022-07-26T14:57:12.747524+00:00",
+    "is_published": true,
+    "image_id": "4bb2e4b3-04dc-48d6-975d-e51f23fdb06f",
+    "keywords": null
+  },
+  {
+    "id": "499fdc5b-942f-408e-97d0-80d9e77ddb3d",
+    "slug": "hychain-esi",
+    "title": "HyChain-ESI",
+    "subtitle": "Hydrogen value chain deployment – Agenda for the emerging hydrogen economy supporting energy system integration",
+    "current_state": "Running",
+    "date_start": "2022-02-01",
+    "updated_at": "2022-07-26T14:57:12.747524+00:00",
+    "is_published": true,
+    "image_id": "499fdc5b-942f-408e-97d0-80d9e77ddb3d",
+    "keywords": null
+  },
+  {
+    "id": "7c03691c-2696-4e3d-a2f7-a83994b61387",
+    "slug": "nextgenopt",
+    "title": "NextGenOpt",
+    "subtitle": "Next Generation Sector-Coupling Models for Optimal Investments and Operation",
+    "current_state": "Running",
+    "date_start": "2022-02-01",
+    "updated_at": "2022-07-26T14:57:12.747524+00:00",
+    "is_published": true,
+    "image_id": "7c03691c-2696-4e3d-a2f7-a83994b61387",
+    "keywords": null
+  },
+  {
+    "id": "257320c0-fecb-49c6-a6df-5f9f3b95b6fd",
+    "slug": "tesops",
+    "title": "TeSoPs",
+    "subtitle": "Technologically and socially feasible transition pathways for local energy system integration",
+    "current_state": "Running",
+    "date_start": "2022-02-01",
+    "updated_at": "2022-07-26T14:57:12.747524+00:00",
+    "is_published": true,
+    "image_id": "257320c0-fecb-49c6-a6df-5f9f3b95b6fd",
+    "keywords": null
+  },
+  {
+    "id": "d9110d68-17db-4428-b067-679fd7116cb4",
+    "slug": "granular-materials",
+    "title": "An artificial brain for interpreting and accelerating physics-based simulations of granular materials",
+    "subtitle": " ",
+    "current_state": "Running",
+    "date_start": "2022-01-01",
+    "updated_at": "2022-07-26T14:57:12.747524+00:00",
+    "is_published": true,
+    "image_id": "d9110d68-17db-4428-b067-679fd7116cb4",
+    "keywords": null
+  },
+  {
+    "id": "7f0a32a8-630a-4fe2-b6c8-faa19c626795",
+    "slug": "fusion-reactor",
+    "title": "Development of the European fusion reactor simulation framework for experimental design, optimization, and control",
+    "subtitle": " ",
+    "current_state": "Running",
+    "date_start": "2022-01-01",
+    "updated_at": "2022-07-26T14:57:12.747524+00:00",
+    "is_published": true,
+    "image_id": "7f0a32a8-630a-4fe2-b6c8-faa19c626795",
+    "keywords": null
+  },
+  {
+    "id": "7386533b-e762-4272-9eaa-eae5589ba2ee",
+    "slug": "et-apps",
+    "title": "Efficient and robust open-source modelling platform for Energy Transition applications",
+    "subtitle": " ",
+    "current_state": "Running",
+    "date_start": "2022-01-01",
+    "updated_at": "2022-07-26T14:57:12.747524+00:00",
+    "is_published": true,
+    "image_id": "7386533b-e762-4272-9eaa-eae5589ba2ee",
+    "keywords": null
+  }
+]

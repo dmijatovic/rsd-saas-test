@@ -1,5 +1,12 @@
+// SPDX-FileCopyrightText: 2022 Dusan Mijatovic (dv4all)
+// SPDX-FileCopyrightText: 2022 Ewan Cahen (Netherlands eScience Center) <e.cahen@esciencecenter.nl>
+// SPDX-FileCopyrightText: 2022 Netherlands eScience Center
+// SPDX-FileCopyrightText: 2022 dv4all
+//
+// SPDX-License-Identifier: Apache-2.0
+
 import {AutocompleteOption} from '../types/AutocompleteOptions'
-import {SearchContributor} from '../types/Contributor'
+import {SearchPerson} from '../types/Contributor'
 import {createJsonHeaders} from './fetchHelpers'
 import {getDisplayName} from './getDisplayName'
 import logger from './logger'
@@ -22,6 +29,11 @@ const exampleResponse = {
 export type OrcidRecord = typeof exampleResponse
 
 const baseUrl = 'https://pub.orcid.org/v3.0/expanded-search/'
+const orcidRegex = /^\d{4}-\d{4}-\d{4}-\d{3}[0-9X]$/
+
+export function isOrcid(stringToCheck: string): boolean {
+  return stringToCheck.match(orcidRegex) !== null
+}
 
 export async function getORCID({searchFor}: { searchFor: string }) {
   try {
@@ -52,6 +64,9 @@ export async function getORCID({searchFor}: { searchFor: string }) {
 }
 
 function buildSearchQuery(searchFor: string) {
+  if (isOrcid(searchFor)) {
+    return `q=orcid:${searchFor}`
+  }
   const names = searchFor.split(' ')
   const given_names = names[0]
   const family_names = names.length > 1 ? names.slice(1).join(' ') : null
@@ -63,7 +78,7 @@ function buildSearchQuery(searchFor: string) {
 }
 
 
-function buildAutocompleteOptions(data: OrcidRecord[]): AutocompleteOption<SearchContributor>[]{
+function buildAutocompleteOptions(data: OrcidRecord[]): AutocompleteOption<SearchPerson>[]{
   if (!data) return []
 
   const options = data.map(item => {
@@ -78,7 +93,7 @@ function buildAutocompleteOptions(data: OrcidRecord[]): AutocompleteOption<Searc
         given_names: item['given-names'],
         family_names: item['family-names'],
         email_address: item['email'][0] ?? null,
-        affiliation: item['institution-name'].join('; ') ?? null,
+        institution: item['institution-name'] ?? null,
         orcid: item['orcid-id'],
         display_name,
         source: 'ORCID' as 'ORCID'
