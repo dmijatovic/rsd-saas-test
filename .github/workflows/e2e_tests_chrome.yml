@@ -57,6 +57,16 @@ jobs:
       working-directory: e2e
       run: npx playwright install chromium chrome firefox --with-deps
       if: steps.playwright-cache.outputs.cache-hit != 'true'
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+    - name: Build with GHA cache
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        push: false
+        # tags: rsd/app:latest
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
     - name: build rsd
       working-directory: .
       run: |
