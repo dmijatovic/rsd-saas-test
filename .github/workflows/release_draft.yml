@@ -137,4 +137,7 @@ jobs:
       branch: master
       commit_message: "chore(release): update citation file"
     secrets:
+      # need to pass PAT using secrets prop to reusable workflow (module)
+      # the secrets are not passed automatically to child modules
+      # see https://docs.github.com/en/enterprise-cloud@latest/actions/using-workflows/reusing-workflows#passing-inputs-and-secrets-to-a-reusable-workflow
       token: ${{ secrets.PAT_RELEASE_REPO }}

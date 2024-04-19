@@ -16,6 +16,8 @@ on:
         description: Commit message to use
         type: string
     secrets:
+      # need to pass PAT token to reusable workflow via secrets in order to commit to protected branch
+      # see https://docs.github.com/en/enterprise-cloud@latest/actions/using-workflows/reusing-workflows#passing-inputs-and-secrets-to-a-reusable-workflow
       token:
         required: true
         description: PAT_RELEASE_REPO token
@@ -28,11 +30,9 @@ jobs:
       - name: checkout ${{inputs.branch}}
         # https://github.com/actions/checkout
         uses: actions/checkout@v4
-        # env:
-        #   # load PAT_TOKEN into github token?!?
-        #   GITHUB_TOKEN: {{ secrets.PAT_RELEASE_REPO }}
         with:
           ref: ${{inputs.branch}}
+          # use PAT secret to be able to commit to protected master branch
           token: ${{secrets.token}}
 
       - name: download ${{inputs.artifact}}
