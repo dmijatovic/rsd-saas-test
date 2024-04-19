@@ -16,7 +16,7 @@
   // it tells VScode to use eslint plugin
   // Note! you might also need to disable Prettier or VSCode defaults
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": true,
+    "source.fixAll.eslint": "explicit"
   },
   // Tailwind plugin integration
   "css.validate": false,

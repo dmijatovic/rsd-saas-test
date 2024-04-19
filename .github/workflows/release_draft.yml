@@ -6,7 +6,7 @@ on:
 jobs:
   release_tag:
     name: calculate version
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     outputs:
       changelog: ${{steps.changelog.outputs.clean_changelog}}
       tag: ${{steps.changelog.outputs.tag}}
@@ -14,7 +14,7 @@ jobs:
     steps:
       - name: checkout all history
         # https://github.com/actions/checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           # checkout whole history
           fetch-depth: 0
@@ -22,7 +22,7 @@ jobs:
       - name: calculate new version and create changelog content
         id: changelog
         # https://github.com/TriPSs/conventional-changelog-action
-        uses: TriPSs/conventional-changelog-action@v3
+        uses: TriPSs/conventional-changelog-action@v5
         with:
           # you can also create separate token to trace action
           github-token: "${{secrets.GITHUB_TOKEN}}"
@@ -38,7 +38,7 @@ jobs:
   log_release_tag:
     needs: release_tag
     name: log version output
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: info
         run: |
@@ -50,11 +50,11 @@ jobs:
     if: needs.release_tag.outputs.skipped == 'false'
     needs: [release_tag]
     name: create deployment.zip
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: checkout branch
         # https://github.com/actions/checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: update docker-compose.yml
         run: |
@@ -73,23 +73,23 @@ jobs:
 
       - name: zip deployment files
         run: |
-          zip deployment.zip \
+          zip --junk-paths deployment.zip \
             ./deployment/docker-compose.yml \
-            ./deployment/.env.example \
+            ./nginx/nginx.conf \
+            .env.example \
             ./deployment/README.md \
-            CITATION.cff \
-            LICENSE
+            CITATION.cff
 
       - name: Upload deployment.zip
         # https://github.com/actions/upload-artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: deployment
           path: deployment.zip
 
       - name: Upload CITATION.cff
         # https://github.com/actions/upload-artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: citation
           path: CITATION.cff
@@ -99,10 +99,10 @@ jobs:
     if: needs.release_tag.outputs.skipped == 'false'
     needs: [release_tag, deployment_files]
     name: create release draft
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: get deployment.zip
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: deployment
 
@@ -114,7 +114,7 @@ jobs:
 
       - name: create release draft
         # https://github.com/softprops/action-gh-release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         env:
           # The token is provided by Actions, you do not need to create your own token
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
@@ -125,3 +125,14 @@ jobs:
           draft: true
           prerelease: false
           files: deployment.zip
+
+  citation:
+    # it needs to be checked on string value
+    if: needs.release_tag.outputs.skipped == 'false'
+    needs: [ release_tag, deployment_files, release_draft ]
+    name: citations
+    uses: ./.github/workflows/_cff.yml
+    with:
+      artifact: citation
+      branch: master
+      commit_message: "chore(release): update citation file"
