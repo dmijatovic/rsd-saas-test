@@ -15,6 +15,10 @@ on:
         required: true
         description: Commit message to use
         type: string
+    secrets:
+      token:
+        required: true
+        description: PAT_RELEASE_REPO token
 
 jobs:
   commit_cff:
@@ -24,12 +28,12 @@ jobs:
       - name: checkout ${{inputs.branch}}
         # https://github.com/actions/checkout
         uses: actions/checkout@v4
-        env:
-          # load PAT_TOKEN into github token?!?
-          GITHUB_TOKEN: ${{ secrets.PAT_RELEASE_REPO }}
+        # env:
+        #   # load PAT_TOKEN into github token?!?
+        #   GITHUB_TOKEN: {{ secrets.PAT_RELEASE_REPO }}
         with:
           ref: ${{inputs.branch}}
-          token: ${{secrets.GITHUB_TOKEN}}
+          token: ${{secrets.token}}
 
       - name: download ${{inputs.artifact}}
         uses: actions/download-artifact@v4

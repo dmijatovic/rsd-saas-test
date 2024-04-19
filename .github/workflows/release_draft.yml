@@ -136,3 +136,5 @@ jobs:
       artifact: citation
       branch: master
       commit_message: "chore(release): update citation file"
+    secrets:
+      token: ${{ secrets.PAT_RELEASE_REPO }}
