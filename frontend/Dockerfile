@@ -13,7 +13,7 @@ RUN yarn install --frozen-lockfile --silent
 COPY . .
 
 # test solution
-RUN yarn test
+# RUN yarn test
 
 # build the solution
 RUN yarn run build

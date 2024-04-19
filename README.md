@@ -82,7 +82,13 @@ cd data-migration
 docker-compose up
 ```
 
-More information about [data migration is avaliable here](data-migration/README.md).
+More information about [data migration is available here](data-migration/README.md).
+
+## Releases
+
+This repo supports manual releases using github actions. To create draft release use "release draft" action.
+This action will create draft release, update CITATION.cff file and commit it to master branch.
+When you publish the draft the tag will be applied to master branch and the images with that tag will be created using build images action.
 
 ## Tech Stack
 
