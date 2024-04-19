@@ -19,22 +19,22 @@ on:
 jobs:
   commit_cff:
     name: commit cff
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: checkout ${{inputs.branch}}
         # https://github.com/actions/checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: ${{inputs.branch}}
 
       - name: download ${{inputs.artifact}}
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ${{inputs.artifact}}
 
       - name: commit CITATION.cff
         # https://github.com/stefanzweifel/git-auto-commit-action
-        uses: stefanzweifel/git-auto-commit-action@v4
+        uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: ${{inputs.commit_message}}
           file_pattern: CITATION.cff
