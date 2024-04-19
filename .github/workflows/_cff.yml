@@ -24,9 +24,12 @@ jobs:
       - name: checkout ${{inputs.branch}}
         # https://github.com/actions/checkout
         uses: actions/checkout@v4
+        env:
+          # load PAT_TOKEN into github token?!?
+          GITHUB_TOKEN: ${{ secrets.PAT_RELEASE_REPO }}
         with:
           ref: ${{inputs.branch}}
-          token: ${{secrets.PAT_RELEASE_REPO}}
+          token: ${{secrets.GITHUB_TOKEN}}
 
       - name: download ${{inputs.artifact}}
         uses: actions/download-artifact@v4
