@@ -134,5 +134,5 @@ jobs:
     uses: ./.github/workflows/_cff.yml
     with:
       artifact: citation
-      branch: release-commit
+      branch: master
       commit_message: "chore(release): update citation file"
