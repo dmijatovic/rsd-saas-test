@@ -17,7 +17,7 @@ The program can easily be built with `docker-compose`. Each service builds the i
 
 ### Environment variables
 
-The environment variables should be stored in .env file, which is automatically loaded by docker-compose. To validate loading of env variables use `docker-compose config`. More info about use of enviroment variables in docker-compose is available at [official documentation](https://docs.docker.com/compose/environment-variables/)
+The environment variables should be stored in .env file, which is automatically loaded by docker-compose. To validate loading of env variables use `docker-compose config`. More info about use of environment variables in docker-compose is available at [official documentation](https://docs.docker.com/compose/environment-variables/)
 
 - copy the file `.env.example` to `.env` file at the root of the project
 
@@ -86,9 +86,7 @@ More information about [data migration is available here](data-migration/README.
 
 ## Releases
 
-This repo supports manual releases using github actions. To create draft release use "release draft" action.
-This action will create draft release, update CITATION.cff file and commit it to master branch.
-When you publish the draft the tag will be applied to master branch and the images with that tag will be created using build images action.
+The info about creating release is [available here](RELEASES.md)
 
 ## Tech Stack
 
