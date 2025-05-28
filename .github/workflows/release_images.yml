@@ -30,8 +30,8 @@ jobs:
       - name: output version to tag
         id: version
         run: |
-          echo version1 = ${GITHUB_REF/refs\/tags\//}
-          echo "{tag}=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
+          echo version = ${GITHUB_REF/refs\/tags\//}
+          echo "tag=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
       - name: output version to ver
         id: ver
         run: |
@@ -45,19 +45,19 @@ jobs:
       - name: info
         run: |
           echo github_ref=${{ github.ref }}
+          echo outputs.ref=${{ needs.release_tag.outputs.ref }}
           echo outputs.tag=${{ needs.release_tag.outputs.tag }}
           echo outputs.ver=${{ needs.release_tag.outputs.ver }}
-          echo outputs.ref=${{ needs.release_tag.outputs.ref }}
   auth:
     # it needs to be checked on string value
-    if: github.ref != ''
+    if: needs.release_tag.outputs.tag != ''
     needs: [release_tag, log_release_tag]
     name: auth
     uses: ./.github/workflows/_ghcr.yml
     with:
       ghcr_user: ${{github.actor}}
       base_image_name: ghcr.io/dmijatovic/rsd-saas/auth
-      image_tag: ${{github.ref}}
+      image_tag: ${{needs.release_tag.outputs.tag}}
       dockerfile: authentication/Dockerfile
       docker_context: ./authentication
     secrets:
@@ -268,13 +268,13 @@ jobs:
 
   citation:
     # it needs to be checked on string value
-    if: github.ref != ''
-    # needs: [ deployment_files, release_draft ]
+    if: needs.release_tag.outputs.tag != ''
+    needs: [ release_tag ]
     name: citations
     uses: ./.github/workflows/_cff.yml
     with:
       artifact: citation
-      branch: main
+      branch: master
       commit_message: "chore(release): update citation file"
     secrets:
       # need to pass PAT using secrets prop to reusable workflow (module)
