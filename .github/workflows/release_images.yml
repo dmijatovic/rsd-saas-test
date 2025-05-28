@@ -23,14 +23,19 @@ jobs:
     name: extract version from release tag
     runs-on: ubuntu-22.04
     outputs:
+      ref: ${{github.ref}}
       tag: ${{steps.version.outputs.tag}}
+      ver: ${{steps.ver.outputs.tag}}
     steps:
-      - name: extract version from tag
+      - name: output version to tag
         id: version
         run: |
-          # echo ::set-output name=tag::${GITHUB_REF/refs\/tags\//}
-          echo version = ${GITHUB_REF/refs\/tags\//}
+          echo version1 = ${GITHUB_REF/refs\/tags\//}
           echo "{tag}=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
+      - name: output version to ver
+        id: ver
+        run: |
+          echo ::set-output name=tag::${GITHUB_REF/refs\/tags\//}
 
   log_release_tag:
     needs: release_tag
@@ -40,17 +45,19 @@ jobs:
       - name: info
         run: |
           echo github_ref=${{ github.ref }}
-          echo release_tag=${{ needs.release_tag.outputs.tag }}
+          echo outputs.tag=${{ needs.release_tag.outputs.tag }}
+          echo outputs.ver=${{ needs.release_tag.outputs.ver }}
+          echo outputs.ref=${{ needs.release_tag.outputs.ref }}
   auth:
     # it needs to be checked on string value
-    if: needs.release_tag.outputs.tag != ''
+    if: github.ref != ''
     needs: [release_tag, log_release_tag]
     name: auth
     uses: ./.github/workflows/_ghcr.yml
     with:
       ghcr_user: ${{github.actor}}
       base_image_name: ghcr.io/dmijatovic/rsd-saas/auth
-      image_tag: ${{needs.release_tag.outputs.tag}}
+      image_tag: ${{github.ref}}
       dockerfile: authentication/Dockerfile
       docker_context: ./authentication
     secrets:
