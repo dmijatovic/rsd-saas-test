@@ -67,7 +67,7 @@ jobs:
     uses: ./.github/workflows/_ghcr.yml
     with:
       ghcr_user: ${{github.actor}}
-      base_image_name: ghcr.io/research-software-directory/rsd-saas/database
+      base_image_name: ghcr.io/dmijatovic/rsd-saas/database
       image_tag: ${{needs.release_tag.outputs.tag}}
       service_tag: "db.v3.0.1"
       dockerfile: database/Dockerfile
@@ -83,7 +83,7 @@ jobs:
     uses: ./.github/workflows/_ghcr.yml
     with:
       ghcr_user: ${{github.actor}}
-      base_image_name: ghcr.io/research-software-directory/rsd-saas/backend
+      base_image_name: ghcr.io/dmijatovic/rsd-saas/backend
       image_tag: ${{needs.release_tag.outputs.tag}}
       service_tag: "be.v1.13.0"
       dockerfile: backend-postgrest/Dockerfile
@@ -98,7 +98,7 @@ jobs:
     uses: ./.github/workflows/_ghcr.yml
     with:
       ghcr_user: ${{github.actor}}
-      base_image_name: ghcr.io/research-software-directory/rsd-saas/background-services
+      base_image_name: ghcr.io/dmijatovic/rsd-saas/background-services
       image_tag: ${{needs.release_tag.outputs.tag}}
       service_tag: "bs.v1.0.0"
       dockerfile: background-services/Dockerfile
@@ -114,7 +114,7 @@ jobs:
     uses: ./.github/workflows/_ghcr.yml
     with:
       ghcr_user: ${{github.actor}}
-      base_image_name: ghcr.io/research-software-directory/rsd-saas/frontend
+      base_image_name: ghcr.io/dmijatovic/rsd-saas/frontend
       image_tag: ${{needs.release_tag.outputs.tag}}
       service_tag: "fe.v3.3.0"
       dockerfile: frontend/Dockerfile
@@ -130,7 +130,7 @@ jobs:
     uses: ./.github/workflows/_ghcr.yml
     with:
       ghcr_user: ${{github.actor}}
-      base_image_name: ghcr.io/research-software-directory/rsd-saas/nginx
+      base_image_name: ghcr.io/dmijatovic/rsd-saas/nginx
       image_tag: ${{needs.release_tag.outputs.tag}}
       service_tag: "ng.v1.1.4"
       dockerfile: nginx/Dockerfile
@@ -146,7 +146,7 @@ jobs:
     uses: ./.github/workflows/_ghcr.yml
     with:
       ghcr_user: ${{github.actor}}
-      base_image_name: ghcr.io/research-software-directory/rsd-saas/codemeta
+      base_image_name: ghcr.io/dmijatovic/rsd-saas/codemeta
       image_tag: ${{needs.release_tag.outputs.tag}}
       service_tag: "cm.v1.1.4"
       dockerfile: codemeta/Dockerfile
@@ -162,7 +162,7 @@ jobs:
     uses: ./.github/workflows/_ghcr.yml
     with:
       ghcr_user: ${{github.actor}}
-      base_image_name: ghcr.io/research-software-directory/rsd-saas/scrapers
+      base_image_name: ghcr.io/dmijatovic/rsd-saas/scrapers
       image_tag: ${{needs.release_tag.outputs.tag}}
       service_tag: "sc.v1.9.0"
       dockerfile: scrapers/Dockerfile
@@ -178,7 +178,7 @@ jobs:
     uses: ./.github/workflows/_ghcr.yml
     with:
       ghcr_user: ${{github.actor}}
-      base_image_name: ghcr.io/research-software-directory/rsd-saas/documentation
+      base_image_name: ghcr.io/dmijatovic/rsd-saas/documentation
       image_tag: ${{needs.release_tag.outputs.tag}}
       service_tag: "dc.v3.0.0"
       dockerfile: documentation/Dockerfile
