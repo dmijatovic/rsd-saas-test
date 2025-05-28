@@ -25,17 +25,13 @@ jobs:
     outputs:
       ref: ${{github.ref}}
       tag: ${{steps.version.outputs.tag}}
-      ver: ${{steps.ver.outputs.tag}}
     steps:
       - name: output version to tag
         id: version
         run: |
           echo version = ${GITHUB_REF/refs\/tags\//}
+          # write value to output
           echo "tag=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
-      - name: output version to ver
-        id: ver
-        run: |
-          echo ::set-output name=tag::${GITHUB_REF/refs\/tags\//}
 
   log_release_tag:
     needs: release_tag
@@ -47,7 +43,6 @@ jobs:
           echo github_ref=${{ github.ref }}
           echo outputs.ref=${{ needs.release_tag.outputs.ref }}
           echo outputs.tag=${{ needs.release_tag.outputs.tag }}
-          echo outputs.ver=${{ needs.release_tag.outputs.ver }}
   auth:
     # it needs to be checked on string value
     if: needs.release_tag.outputs.tag != ''
@@ -58,6 +53,7 @@ jobs:
       ghcr_user: ${{github.actor}}
       base_image_name: ghcr.io/dmijatovic/rsd-saas/auth
       image_tag: ${{needs.release_tag.outputs.tag}}
+      service_tag: "v1.60.1"
       dockerfile: authentication/Dockerfile
       docker_context: ./authentication
     secrets:
@@ -280,6 +276,6 @@ jobs:
       # need to pass PAT using secrets prop to reusable workflow (module)
       # the secrets are not passed automatically to child modules
       # see https://docs.github.com/en/enterprise-cloud@latest/actions/using-workflows/reusing-workflows#passing-inputs-and-secrets-to-a-reusable-workflow
-      token: ${{ secrets.PAT_RELEASE }}
+      token: ${{ secrets.PAT_RELEASE_REPO }}
 
 

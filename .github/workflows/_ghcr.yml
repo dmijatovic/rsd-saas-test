@@ -22,6 +22,10 @@ on:
         required: true
         description: Image tag (version)
         type: string
+      service_tag:
+        required: true
+        description: Service image tag (version)
+        type: string
       dockerfile:
         required: true
         description: Location and name of docker file
@@ -56,10 +60,11 @@ jobs:
         id: build_image
         run: |
           IMAGE_TAG_VERSION=${{inputs.base_image_name}}:${{inputs.image_tag}}
+          IMAGE_TAG_SERVICE=${{inputs.base_image_name}}:${{inputs.service_tag}}
           IMAGE_TAG_LASTEST=${{inputs.base_image_name}}:latest
           echo image_tag_version $IMAGE_TAG_VERSION
           docker build -t $IMAGE_TAG_VERSION -t $IMAGE_TAG_LASTEST -f ${{inputs.dockerfile}} ${{inputs.docker_context}}
-          echo "{image_build}={$IMAGE_TAG_VERSIONvalue}" >> $GITHUB_OUTPUT
+          echo "{image_build}={$IMAGE_TAG_VERSION}" >> $GITHUB_OUTPUT
       - name: push to ghcr.io
         id: push_image
         run: |
@@ -67,5 +72,5 @@ jobs:
           echo "${{secrets.token}}" | docker login https://ghcr.io -u ${{inputs.ghcr_user}} --password-stdin
           echo push auth image with all tags
           docker push ${{inputs.base_image_name}} --all-tags
-          echo "{image_build}={$IMAGE_TAG_VERSIONvalue}" >> $GITHUB_OUTPUT
+          echo "{image_pushed}={$IMAGE_TAG_VERSION}" >> $GITHUB_OUTPUT
 
