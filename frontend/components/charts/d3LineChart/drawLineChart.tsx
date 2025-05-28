@@ -1,7 +1,17 @@
-import * as d3 from 'd3'
+// SPDX-FileCopyrightText: 2022 Dusan Mijatovic (dv4all)
+// SPDX-FileCopyrightText: 2022 dv4all
+// SPDX-FileCopyrightText: 2024 - 2025 Dusan Mijatovic (Netherlands eScience Center)
+// SPDX-FileCopyrightText: 2024 - 2025 Netherlands eScience Center
+//
+// SPDX-License-Identifier: Apache-2.0
+
+import {
+  select,scaleLinear,
+  scaleTime,line,max,
+  curveBasis,axisBottom
+} from 'd3'
+import logger from '~/utils/logger'
 import {SizeType} from './useResizeObserver'
-import logger from '../../../utils/logger'
-import {colors} from '../../../styles/themeConfig'
 
 type LineData = {
   x: number,
@@ -11,19 +21,21 @@ type LineData = {
 type LineChartConfig = {
   svgEl: SVGAElement,
   dim: SizeType,
-  data: LineData[]
+  data: LineData[],
+  strokeColor: string
 }
 
 const margin = {
-  left: 5, right: 5,
-  top: 0, bottom: 20
+  // minimal margins to host first/last year label 'overflow'
+  left: 12, right: 12,
+  top: 4, bottom: 24
 }
 
 function findMax(data:LineData[]) {
-  const max = d3.max(data, d => d.y)
-  if (max) {
+  const mx = max(data, d => d.y)
+  if (mx) {
     // return Math.ceil(max * 1.5)
-    return max
+    return mx
   }
   return 0
 }
@@ -43,15 +55,18 @@ function timeRange(data: LineData[]) {
 
 
 export default function drawLineChart(props: LineChartConfig) {
-  const {dim: {w, h}, svgEl, data} = props
+  const {dim: {w, h}, svgEl, data, strokeColor} = props
+  // if no data return null
+  if (data.length === 0) return null
   // ignore if no size
   if (!w || !h) return
+
   // defined dimensions
   const width = w - margin.left - margin.right
   const height = h - margin.top - margin.bottom
 
   // select svg element
-  const svg = d3.select(svgEl)
+  const svg = select(svgEl)
     // important! for resizing the svg dimensions
     // need to be set to 100% while the actual
     // dimensions of wrapper div element are used
@@ -61,23 +76,23 @@ export default function drawLineChart(props: LineChartConfig) {
     // .style('background', '#eeee')
 
   // define x scale as time scale
-  const xScale = d3.scaleTime()
+  const xScale = scaleTime()
     .domain(timeRange(data))
     .range([0,width])
 
   // define y scale as linear
-  const yScale = d3.scaleLinear()
+  const yScale = scaleLinear()
     .domain([0, findMax(data)])
     .range([height, margin.top])
 
   // generate
-  const generateScaledLine = d3.line()
-    .x((d:any,i:number) => {
+  const generateScaledLine = line()
+    .x((d:any) => {
       // x as date value, using xScale to calculate position
       const val = xScale(new Date(d.x))
       return val
     })
-    .y((d:any,i) => {
+    .y((d:any) => {
       // y as number, using yScale to calculate position
       const val = yScale(d.y)
       if (val < 0) {
@@ -86,10 +101,10 @@ export default function drawLineChart(props: LineChartConfig) {
       return val
     })
     // curve type, see http://bl.ocks.org/d3indepth/b6d4845973089bc1012dec1674d3aff8
-    .curve(d3.curveBasis)
+    .curve(curveBasis)
 
 
-  const bottomAxe = d3.axisBottom(xScale)
+  const bottomAxe = axisBottom(xScale)
     // remove outer ticks
     .tickSizeOuter(0)
 
@@ -117,12 +132,12 @@ export default function drawLineChart(props: LineChartConfig) {
   lineGroup.selectAll('.line')
     .data([data])
     .join('path')
-      .attr('class','line')
-      .attr('d',d=>generateScaledLine(d as any))
-      .attr('fill','none')
-      .attr('stroke', colors.primary)
-      .attr('stroke-width', 2)
-      .attr('stroke-opacity', 0.7)
+    .attr('class','line')
+    .attr('d',d=>generateScaledLine(d as any))
+    .attr('fill','none')
+    .attr('stroke', strokeColor)
+    .attr('stroke-width', 2)
+    .attr('stroke-opacity', 0.7)
 
   return true
 }

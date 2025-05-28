@@ -1,22 +1,21 @@
+# SPDX-FileCopyrightText: 2022 Christian Meeßen (GFZ) <christian.meessen@gfz-potsdam.de>
+# SPDX-FileCopyrightText: 2022 Dusan Mijatovic (dv4all)
+# SPDX-FileCopyrightText: 2022 Helmholtz Centre Potsdam - GFZ German Research Centre for Geosciences
+# SPDX-FileCopyrightText: 2022 dv4all
+# SPDX-FileCopyrightText: 2023 - 2024 Dusan Mijatovic (Netherlands eScience Center)
+# SPDX-FileCopyrightText: 2023 - 2025 Ewan Cahen (Netherlands eScience Center) <e.cahen@esciencecenter.nl>
+# SPDX-FileCopyrightText: 2023 - 2025 Netherlands eScience Center
+#
+# SPDX-License-Identifier: Apache-2.0
+
 name: release
 
 on:
   workflow_dispatch:
-    inputs:
-      draft:
-        description: 'Release draft'
-        required: true
-        default: true
-        type: boolean
-      prerelease:
-        description: 'Pre-release'
-        required: true
-        default: false
-        type: boolean
 
 jobs:
   release_tag:
-    name: calculate version
+    name: conventional changelog
     runs-on: ubuntu-22.04
     outputs:
       changelog: ${{steps.changelog.outputs.clean_changelog}}
@@ -55,13 +54,145 @@ jobs:
         run: |
           echo skipped=${{needs.release_tag.outputs.skipped}}
           echo tag=${{needs.release_tag.outputs.tag}}
-          echo draft=${{github.event.inputs.draft}}
-          echo prerelease=${{github.event.inputs.prerelease}}
+  auth:
+    # it needs to be checked on string value
+    if: needs.release_tag.outputs.skipped == 'false'
+    needs: release_tag
+    name: auth
+    uses: ./.github/workflows/_ghcr.yml
+    with:
+      ghcr_user: ${{github.actor}}
+      base_image_name: ghcr.io/research-software-directory/rsd-saas/auth
+      image_tag: ${{needs.release_tag.outputs.tag}}
+      dockerfile: authentication/Dockerfile
+      docker_context: ./authentication
+    secrets:
+      token: ${{secrets.GITHUB_TOKEN}}
+
+  database:
+    # it needs to be checked on string value
+    if: needs.release_tag.outputs.skipped == 'false'
+    needs: release_tag
+    name: database
+    uses: ./.github/workflows/_ghcr.yml
+    with:
+      ghcr_user: ${{github.actor}}
+      base_image_name: ghcr.io/research-software-directory/rsd-saas/database
+      image_tag: ${{needs.release_tag.outputs.tag}}
+      dockerfile: database/Dockerfile
+      docker_context: ./database
+    secrets:
+      token: ${{secrets.GITHUB_TOKEN}}
+
+  backend:
+    # it needs to be checked on string value
+    if: needs.release_tag.outputs.skipped == 'false'
+    needs: release_tag
+    name: backend api
+    uses: ./.github/workflows/_ghcr.yml
+    with:
+      ghcr_user: ${{github.actor}}
+      base_image_name: ghcr.io/research-software-directory/rsd-saas/backend
+      image_tag: ${{needs.release_tag.outputs.tag}}
+      dockerfile: backend-postgrest/Dockerfile
+      docker_context: ./backend-postgrest
+    secrets:
+      token: ${{secrets.GITHUB_TOKEN}}
+
+  background-services:
+    # it needs to be checked on string value
+    if: needs.release_tag.outputs.skipped == 'false'
+    needs: release_tag
+    name: background services
+    uses: ./.github/workflows/_ghcr.yml
+    with:
+      ghcr_user: ${{github.actor}}
+      base_image_name: ghcr.io/research-software-directory/rsd-saas/background-services
+      image_tag: ${{needs.release_tag.outputs.tag}}
+      dockerfile: background-services/Dockerfile
+      docker_context: ./background-services
+    secrets:
+      token: ${{secrets.GITHUB_TOKEN}}
+
+  frontend:
+    # it needs to be checked on string value
+    if: needs.release_tag.outputs.skipped == 'false'
+    needs: release_tag
+    name: frontend
+    uses: ./.github/workflows/_ghcr.yml
+    with:
+      ghcr_user: ${{github.actor}}
+      base_image_name: ghcr.io/research-software-directory/rsd-saas/frontend
+      image_tag: ${{needs.release_tag.outputs.tag}}
+      dockerfile: frontend/Dockerfile
+      docker_context: ./frontend
+    secrets:
+      token: ${{secrets.GITHUB_TOKEN}}
+
+  nginx:
+    # it needs to be checked on string value
+    if: needs.release_tag.outputs.skipped == 'false'
+    needs: release_tag
+    name: nginx
+    uses: ./.github/workflows/_ghcr.yml
+    with:
+      ghcr_user: ${{github.actor}}
+      base_image_name: ghcr.io/research-software-directory/rsd-saas/nginx
+      image_tag: ${{needs.release_tag.outputs.tag}}
+      dockerfile: nginx/Dockerfile
+      docker_context: ./nginx
+    secrets:
+      token: ${{secrets.GITHUB_TOKEN}}
+
+  codemeta:
+    # it needs to be checked on string value
+    if: needs.release_tag.outputs.skipped == 'false'
+    needs: release_tag
+    name: codemeta
+    uses: ./.github/workflows/_ghcr.yml
+    with:
+      ghcr_user: ${{github.actor}}
+      base_image_name: ghcr.io/research-software-directory/rsd-saas/codemeta
+      image_tag: ${{needs.release_tag.outputs.tag}}
+      dockerfile: codemeta/Dockerfile
+      docker_context: ./codemeta
+    secrets:
+      token: ${{secrets.GITHUB_TOKEN}}
+
+  scrapers:
+    # it needs to be checked on string value
+    if: needs.release_tag.outputs.skipped == 'false'
+    needs: release_tag
+    name: scrapers
+    uses: ./.github/workflows/_ghcr.yml
+    with:
+      ghcr_user: ${{github.actor}}
+      base_image_name: ghcr.io/research-software-directory/rsd-saas/scrapers
+      image_tag: ${{needs.release_tag.outputs.tag}}
+      dockerfile: scrapers/Dockerfile
+      docker_context: ./scrapers
+    secrets:
+      token: ${{secrets.GITHUB_TOKEN}}
+
+  documentation:
+    # it needs to be checked on string value
+    if: needs.release_tag.outputs.skipped == 'false'
+    needs: release_tag
+    name: documentation
+    uses: ./.github/workflows/_ghcr.yml
+    with:
+      ghcr_user: ${{github.actor}}
+      base_image_name: ghcr.io/research-software-directory/rsd-saas/documentation
+      image_tag: ${{needs.release_tag.outputs.tag}}
+      dockerfile: documentation/Dockerfile
+      docker_context: ./documentation
+    secrets:
+      token: ${{secrets.GITHUB_TOKEN}}
 
   deployment_files:
-    # it needs to be check on string value
+    # it needs to be checked on string value
     if: needs.release_tag.outputs.skipped == 'false'
-    needs: [release_tag]
+    needs: [ release_tag,auth,database,backend,frontend,nginx,scrapers,documentation,codemeta,background-services ]
     name: create deployment.zip
     runs-on: ubuntu-22.04
     steps:
@@ -86,12 +217,12 @@ jobs:
 
       - name: zip deployment files
         run: |
-          zip deployment.zip \
+          zip --junk-paths deployment.zip \
             ./deployment/docker-compose.yml \
-            ./deployment/.env.example \
+            ./nginx/nginx.conf \
+            .env.example \
             ./deployment/README.md \
-            CITATION.cff \
-            LICENSE
+            CITATION.cff
 
       - name: Upload deployment.zip
         # https://github.com/actions/upload-artifact
@@ -107,12 +238,12 @@ jobs:
           name: citation
           path: CITATION.cff
 
-  create_release:
-    # it needs to be check on string value
+  release_draft:
+    # it needs to be checked on string value
     if: needs.release_tag.outputs.skipped == 'false'
-    needs: [release_tag, deployment_files]
-    name: create release
-    runs-on: ubuntu-latest
+    needs: [ release_tag, deployment_files ]
+    name: create release draft
+    runs-on: ubuntu-22.04
     steps:
       - name: get deployment.zip
         uses: actions/download-artifact@v4
@@ -125,7 +256,7 @@ jobs:
           ls -lha
           echo tag_name=${{needs.release_tag.outputs.tag}}
 
-      - name: create release
+      - name: create release draft
         # https://github.com/softprops/action-gh-release
         uses: softprops/action-gh-release@v2
         env:
@@ -135,6 +266,24 @@ jobs:
           tag_name: ${{needs.release_tag.outputs.tag}}
           name: ${{needs.release_tag.outputs.tag}}
           body: ${{needs.release_tag.outputs.changelog}}
-          draft: ${{github.event.inputs.draft}}
-          prerelease: ${{github.event.inputs.prerelease}}
+          draft: true
+          prerelease: false
           files: deployment.zip
+
+  citation:
+    # it needs to be checked on string value
+    if: needs.release_tag.outputs.skipped == 'false'
+    needs: [ release_tag, deployment_files, release_draft ]
+    name: citations
+    uses: ./.github/workflows/_cff.yml
+    with:
+      artifact: citation
+      branch: main
+      commit_message: "chore(release): update citation file"
+    secrets:
+      # need to pass PAT using secrets prop to reusable workflow (module)
+      # the secrets are not passed automatically to child modules
+      # see https://docs.github.com/en/enterprise-cloud@latest/actions/using-workflows/reusing-workflows#passing-inputs-and-secrets-to-a-reusable-workflow
+      token: ${{ secrets.PAT_RELEASE }}
+
+

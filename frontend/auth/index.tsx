@@ -1,20 +1,37 @@
+// SPDX-FileCopyrightText: 2022 - 2023 Dusan Mijatovic (dv4all)
+// SPDX-FileCopyrightText: 2022 - 2023 dv4all
+// SPDX-FileCopyrightText: 2023 - 2024 Dusan Mijatovic (Netherlands eScience Center)
+// SPDX-FileCopyrightText: 2023 - 2024 Netherlands eScience Center
+// SPDX-FileCopyrightText: 2024 Christian Meeßen (GFZ) <christian.meessen@gfz-potsdam.de>
+// SPDX-FileCopyrightText: 2024 Helmholtz Centre Potsdam - GFZ German Research Centre for Geosciences
+//
+// SPDX-License-Identifier: Apache-2.0
+
 import {createContext, Dispatch, SetStateAction, useState, useContext, useEffect} from 'react'
-import verifyJwt, {decodeJwt} from './jwtUtils'
 import {IncomingMessage, OutgoingMessage} from 'http'
-import cookie from 'cookie'
-import logger from '../utils/logger'
+import {parse} from 'cookie'
+import logger from '~/utils/logger'
+import verifyJwt, {decodeJwt} from './jwtUtils'
 import {refreshSession} from './refreshSession'
 
 // refresh schedule margin 5min. before expiration time
-export const REFRESH_MARGIN = 5 * 60 * 1000
-
+// REFRESH_MARGIN_MSEC env variable is used for test purposes ONLY
+const testMargin = process.env.REFRESH_MARGIN_MSEC ? parseInt(process.env.REFRESH_MARGIN_MSEC) : undefined
+export const REFRESH_MARGIN = testMargin ?? 5 * 60 * 1000
+export type RsdRole = 'rsd_admin' | 'rsd_user'
+export type RsdUserData = {
+  [property: string]: string[]
+}
 export type RsdUser = {
-  iss: 'rsd_auth',
-  role: 'rsd_user' | 'rsd_admin',
+  iss: 'rsd_auth'
+  role: RsdRole
   // expiration time
-  exp: number,
+  exp: number
   // uid
   account: string
+  // display name
+  name: string,
+  data?: RsdUserData,
 }
 
 export type Session = {
@@ -36,21 +53,26 @@ export const defaultSession:Session={
 
 export const initSession: AuthSession = {
   session: defaultSession,
-  setSession: ()=>defaultSession
+  setSession: () => defaultSession
 }
 
-const AuthContext = createContext(initSession)
+const AuthContext = createContext<AuthSession>(initSession)
 
 // AuthProvider used in _app to share session between all components
 export function AuthProvider(props: any) {
-  const [session, setSession] = useState(props?.session || defaultSession)
+  const [session, setSession] = useState<Session>(props?.session)
+
+  // console.group('AuthProvider')
+  // console.log('session...', session)
+  // console.log('props.session...', props?.session)
+  // console.groupEnd()
 
   useEffect(() => {
     // schedule
     let schedule: any
     // only if authenticated = valid token
     if (session.status === 'authenticated'
-      && session?.user) {
+      && session?.user?.exp) {
       const {user} = session
       const expiresInMs = getExpInMs(user.exp)
       const waitInMs = getWaitInMs(expiresInMs)
@@ -58,15 +80,20 @@ export function AuthProvider(props: any) {
       if (schedule) clearTimeout(schedule)
       if (expiresInMs <= 0) {
         // token expired
-        setSession(defaultSession)
+        setSession({
+          ...session,
+          status: 'expired',
+          token: `AuthProvider session EXPIRED for account ${session.user.account}`,
+          user: null
+        })
       }else{
         // console.log(`schedule refresh in ${waitInMs/1000}sec.`)
         schedule = setTimeout(() => {
-          // console.log('call...refreshSession')
+          // console.log('call...refreshSession...',user.account)
           // refresh token by sending current valid cookie
           refreshSession()
             .then(newSession => {
-              // console.log('newSession...', newSession)
+              // console.log('newSession.token...', newSession?.token)
               // update only if "valid" session
               if (newSession?.status === 'authenticated') {
                 setSession(newSession)
@@ -86,18 +113,29 @@ export function AuthProvider(props: any) {
         clearTimeout(schedule)
       }
     }
-  }, [session, setSession])
-  // console.group('AuthProvider')
-  // console.log('session...', session)
-  // console.groupEnd()
+  }, [session])
+
   return <AuthContext.Provider value={{session, setSession}} {...props}/>
 }
 
 // Auth hook to use in the components
 export const useAuth = () => useContext(AuthContext)
 
+// More specific session hook which destructures session
+export function useSession(){
+  const {session} = useContext(AuthContext)
+
+  // console.group('useSession')
+  // console.log('session...', session)
+  // console.groupEnd()
+
+  return {
+    ...session
+  }
+}
+
 /**
- * Calculate expirition time from now in milliseconds
+ * Calculate expiration time from now in milliseconds
  * @param exp in seconds
  * @returns difference in milliseconds
  */
@@ -139,7 +177,7 @@ export function getSessionSeverSide(req: IncomingMessage|undefined, res: Outgoin
   // get token from cookie
   const token = getRsdTokenNode(req)
   // create session from token
-  const session = createSession(token)
+  const session = createSession(token ?? null)
   // remove invalid cookie
   if (session.status === 'invalid') {
     // console.log('remove rsd cookies...')
@@ -161,7 +199,7 @@ export function getRsdTokenNode(req: IncomingMessage){
   // check for cookies
   if (req?.headers?.cookie) {
     // parse cookies from node request
-    const cookies = cookie.parse(req.headers.cookie)
+    const cookies = parse(req.headers.cookie)
     // validate and decode
     const token = cookies?.rsd_token
     return token
@@ -216,4 +254,18 @@ export function removeRsdTokenNode(res: OutgoingMessage) {
   } catch (e:any) {
     logger(`removeRsdTokenCookie: ${e?.message}`,'error')
   }
+}
+
+export function getUserFromToken(token?: string | null) {
+  if (token) {
+    const result = verifyJwt(token)
+    if (result === 'valid') {
+      // decode JWT
+      const user = decodeJwt(token) as RsdUser
+      //
+      return user
+    }
+    return null
+  }
+  return null
 }

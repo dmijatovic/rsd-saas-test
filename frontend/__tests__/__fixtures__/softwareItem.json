@@ -1,8 +1,0 @@
-{
-  "id": "8840feb8-5e70-4b90-95e8-43f926e9628e",
-  "slug": "nlesc-python-template",
-  "brand_name": "Netherlands eScience Center Python Template",
-  "short_statement": "Generic template for Python packages, so you can spend less time setting up and configuring, and comply with the Netherlands eScience Center Software Development Guide from the start.",
-  "is_featured": true,
-  "updated_at": "2021-12-14T15:40:04.471114"
-}

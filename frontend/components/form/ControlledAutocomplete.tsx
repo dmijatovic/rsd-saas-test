@@ -1,58 +1,74 @@
-import TextField from '@mui/material/TextField'
-import Autocomplete from '@mui/material/Autocomplete'
-import {Controller} from 'react-hook-form'
-import {AutocompleteOption} from '../../types/AutocompleteOptions'
+// SPDX-FileCopyrightText: 2023 - 2025 Dusan Mijatovic (Netherlands eScience Center)
+// SPDX-FileCopyrightText: 2023 - 2025 Netherlands eScience Center
+// SPDX-FileCopyrightText: 2023 Dusan Mijatovic (dv4all)
+// SPDX-FileCopyrightText: 2023 dv4all
+//
+// SPDX-License-Identifier: Apache-2.0
 
-type ControlledAutocompleteType<T>={
+import {JSX} from 'react'
+import Autocomplete from '@mui/material/Autocomplete'
+import TextField from '@mui/material/TextField'
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
+import {Controller} from 'react-hook-form'
+
+type ControlledAutocompleteProps = {
   name: string,
-  control: any,
-  options: AutocompleteOption<T>[],
   label: string,
-  rules?: any,
-  defaultValue?: AutocompleteOption<T>[]
+  options: string[],
+  helperTextMessage?: string | JSX.Element,
+  control: any
+  rules: any
+  variant?: 'standard' | 'outlined' | 'filled'
 }
 
-export default function ControlledAutocomplete<T>({
-  name, control, options, label, rules, defaultValue = []
-}:ControlledAutocompleteType<T>) {
+export default function ControlledAutocomplete({
+  name, label, control, rules, options, variant, helperTextMessage
+}: ControlledAutocompleteProps) {
 
-  let allRules = {required: false}
-  if (rules) {
-    allRules=rules
-  }
   return (
     <Controller
       name={name}
+      rules={rules}
       control={control}
-      defaultValue={defaultValue}
-      rules={allRules}
-      render={({field}) => {
-        const {onChange, value} = field
+      render={({field,fieldState}) => {
+        const {onChange,value} = field
+        const {error} = fieldState
+        // console.group(`ControlledAutocomplete...${name}`)
+        // console.log('error...',error)
+        // console.log('value...', value)
+        // console.groupEnd()
         return (
           <Autocomplete
-            multiple={true}
+            freeSolo={true}
+            multiple={false}
             options={options}
-            onChange={(e, items, reason) => {
-              // here we pass items react-hook-form controller
-              // and mui autocompletes
-              onChange(items)
-            }}
             value={value}
-            isOptionEqualToValue={(
-              option: AutocompleteOption<T>,
-              value: AutocompleteOption<T>) => {
-              if (value) {
-                // we compare key values
-                return option.key === value.key
+            onInputChange={(e, newVal) => {
+              // Save typed input into the controller (form data)
+              // Note! onChange triggers the dirty state
+              // we do not want to call it when data is not changed
+              if (newVal !== value){
+                // debugger
+                if (newVal === '') {
+                  onChange(null)
+                }else{
+                  onChange(newVal)
+                }
               }
-              return false
             }}
+            onChange={(e, item) => {
+              // debugger
+              onChange(item)
+            }}
+            popupIcon={<KeyboardArrowDownIcon />}
             renderInput={(params) => {
               return (
                 <TextField
                   {...params}
                   label={label}
-                  variant="standard"
+                  variant={variant ?? 'outlined'}
+                  error={error ? true: false}
+                  helperText={error?.message ?? helperTextMessage ?? ''}
                 />
               )
             }}

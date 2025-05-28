@@ -1,3 +1,10 @@
+// SPDX-FileCopyrightText: 2022 Dusan Mijatovic (dv4all)
+// SPDX-FileCopyrightText: 2022 dv4all
+// SPDX-FileCopyrightText: 2023 - 2025 Dusan Mijatovic (Netherlands eScience Center)
+// SPDX-FileCopyrightText: 2023 - 2025 Netherlands eScience Center
+//
+// SPDX-License-Identifier: Apache-2.0
+
 import logger from './logger'
 
 export function daysDiff(date:Date):number|undefined{
@@ -28,8 +35,8 @@ export function olderThanXDays(lastDate:Date, xDays=7):boolean{
 }
 
 export function isoStrToDate(isoString:string):Date|null{
-  try{
-    if (isoString){
+  try {
+    if (isoString) {
       const newDate = new Date(isoString)
       return newDate
     }
@@ -65,7 +72,7 @@ export function formatDateToStr(date: Date|undefined, locale = 'en-US',
 }
 
 /**
- * Get human readible time difference like: right now, X hours ago, X days ago etc..
+ * Get human readable time difference like: right now, X hours ago, X days ago etc..
  * @param isoString
  * @param since
  * @returns
@@ -77,7 +84,6 @@ export function getTimeAgoSince(since: Date, isoStringDate: string | null) {
     // convert to date
     const updated = isoStrToDate(isoStringDate)
     if (!updated) return null
-
     if (since > updated) {
       const msDiff = since.getTime() - updated.getTime()
       const hours = 1000 * 60 * 60
@@ -86,22 +92,69 @@ export function getTimeAgoSince(since: Date, isoStringDate: string | null) {
         const daysDiff = Math.floor(hoursDiff / 24)
         if (daysDiff > 30) {
           const monthDiff = Math.floor(daysDiff / 30)
+          if (monthDiff === 1) return `${monthDiff} month ago`
           return `${monthDiff} months ago`
-        }else if (daysDiff > 7) {
+        } else if (daysDiff > 7) {
           const weeksDiff = Math.floor(daysDiff / 7)
+          if (weeksDiff === 1) return `${weeksDiff} week ago`
           return `${weeksDiff} weeks ago`
         } else if (daysDiff > 1) return `${daysDiff} days ago`
         return '1 day ago'
       } else if (hoursDiff === 1) {
         return '1 hour ago'
+      } else if (hoursDiff === 0) {
+        return 'right now'
       } else {
         return `${hoursDiff} hours ago`
       }
     } else {
       return 'right now'
     }
-  } catch (e) {
+  } catch {
     // on fail return nothing
+    return null
+  }
+}
+
+
+export function getMonthYearDate(date: string, locale = 'en-us') {
+  try {
+    const monthDate = new Date(date)
+    if (monthDate) {
+      // return only month and year in us
+      return monthDate.toLocaleDateString(locale, {year: 'numeric', month: 'short'})
+    }
+    return null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Calculates the date from now for number of days passed.
+ * Pass positive value for dates in the future and negative values for dates in the past.
+ */
+export function getDateFromNow(days:number){
+  const newDate = new Date()
+  // change date
+  newDate.setDate(newDate.getDate() + days)
+  // return changed date
+  return newDate
+}
+
+/**
+ * Returns string of date in the format YYYY-MM-DD
+ * @param date
+ * @param locale
+ * @returns
+ */
+export function getYearMonthDay(date:Date) {
+  // this locale uses desired formatting YYYY-MM-DD
+  const locale='fr-CA'
+  try {
+    // we need to use short formatting to return only date value: YYYY-MM-DD
+    return date.toLocaleDateString(locale, {year:'numeric', month:'2-digit', day:'2-digit'})
+  } catch {
     return null
   }
 }
