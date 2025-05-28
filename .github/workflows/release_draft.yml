@@ -32,7 +32,7 @@ jobs:
       - name: calculate new version and create changelog content
         id: changelog
         # https://github.com/TriPSs/conventional-changelog-action
-        uses: TriPSs/conventional-changelog-action@v5
+        uses: TriPSs/conventional-changelog-action@v6
         with:
           # you can also create separate token to trace action
           github-token: "${{secrets.GITHUB_TOKEN}}"
@@ -112,6 +112,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: get deployment.zip
+        # https://github.com/actions/download-artifact
         uses: actions/download-artifact@v4
         with:
           name: deployment

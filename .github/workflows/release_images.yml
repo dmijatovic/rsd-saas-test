@@ -14,6 +14,10 @@ on:
   release:
     types: [published]
 
+  # alternative approach on tag push
+  # push:
+  #   tags: [ 'v*.*.*' ]
+
 jobs:
   log_release_tag:
     # needs: release_tag
