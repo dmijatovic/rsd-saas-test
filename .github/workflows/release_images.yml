@@ -53,7 +53,7 @@ jobs:
       ghcr_user: ${{github.actor}}
       base_image_name: ghcr.io/dmijatovic/rsd-saas/auth
       image_tag: ${{needs.release_tag.outputs.tag}}
-      service_tag: "v1.60.1"
+      service_tag: "auth.v1.60.1"
       dockerfile: authentication/Dockerfile
       docker_context: ./authentication
     secrets:
@@ -262,20 +262,20 @@ jobs:
   #         prerelease: false
   #         files: deployment.zip
 
-  citation:
-    # it needs to be checked on string value
-    if: needs.release_tag.outputs.tag != ''
-    needs: [ release_tag ]
-    name: citations
-    uses: ./.github/workflows/_cff.yml
-    with:
-      artifact: citation
-      branch: master
-      commit_message: "chore(release): update citation file"
-    secrets:
-      # need to pass PAT using secrets prop to reusable workflow (module)
-      # the secrets are not passed automatically to child modules
-      # see https://docs.github.com/en/enterprise-cloud@latest/actions/using-workflows/reusing-workflows#passing-inputs-and-secrets-to-a-reusable-workflow
-      token: ${{ secrets.PAT_RELEASE_REPO }}
+  # citation:
+  #   # it needs to be checked on string value
+  #   if: needs.release_tag.outputs.tag != ''
+  #   needs: [ release_tag ]
+  #   name: citations
+  #   uses: ./.github/workflows/_cff.yml
+  #   with:
+  #     artifact: citation
+  #     branch: master
+  #     commit_message: "chore(release): update citation file"
+  #   secrets:
+  #     # need to pass PAT using secrets prop to reusable workflow (module)
+  #     # the secrets are not passed automatically to child modules
+  #     # see https://docs.github.com/en/enterprise-cloud@latest/actions/using-workflows/reusing-workflows#passing-inputs-and-secrets-to-a-reusable-workflow
+  #     token: ${{ secrets.PAT_RELEASE_REPO }}
 
 
