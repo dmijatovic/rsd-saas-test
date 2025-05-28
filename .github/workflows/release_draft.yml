@@ -36,7 +36,7 @@ jobs:
         with:
           # you can also create separate token to trace action
           github-token: "${{secrets.GITHUB_TOKEN}}"
-          # do not create changelog file, the content is used at next step for relase body
+          # do not create changelog file, the content is used at next step for release body
           output-file: false
           # do not create additional commit, just tag current commit with the version
           skip-commit: true
@@ -137,20 +137,21 @@ jobs:
           prerelease: false
           files: deployment.zip
 
-  citation:
-    # it needs to be checked on string value
-    if: needs.release_tag.outputs.skipped == 'false'
-    needs: [ release_tag, deployment_files, release_draft ]
-    name: citations
-    uses: ./.github/workflows/_cff.yml
-    with:
-      artifact: citation
-      branch: main
-      commit_message: "chore(release): update citation file"
-    secrets:
-      # need to pass PAT using secrets prop to reusable workflow (module)
-      # the secrets are not passed automatically to child modules
-      # see https://docs.github.com/en/enterprise-cloud@latest/actions/using-workflows/reusing-workflows#passing-inputs-and-secrets-to-a-reusable-workflow
-      token: ${{ secrets.PAT_RELEASE }}
+  # MOVED TO IMAGE CREATION
+  # citation:
+  #   # it needs to be checked on string value
+  #   if: needs.release_tag.outputs.skipped == 'false'
+  #   needs: [ release_tag, deployment_files, release_draft ]
+  #   name: citations
+  #   uses: ./.github/workflows/_cff.yml
+  #   with:
+  #     artifact: citation
+  #     branch: main
+  #     commit_message: "chore(release): update citation file"
+  #   secrets:
+  #     # need to pass PAT using secrets prop to reusable workflow (module)
+  #     # the secrets are not passed automatically to child modules
+  #     # see https://docs.github.com/en/enterprise-cloud@latest/actions/using-workflows/reusing-workflows#passing-inputs-and-secrets-to-a-reusable-workflow
+  #     token: ${{ secrets.PAT_RELEASE }}
 
 
