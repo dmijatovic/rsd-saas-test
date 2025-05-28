@@ -52,7 +52,7 @@ jobs:
       ghcr_user: ${{github.actor}}
       base_image_name: ghcr.io/dmijatovic/rsd-saas/auth
       image_tag: ${{needs.release_tag.outputs.tag}}
-      service_tag: "auth.v1.6.0"
+      service_tag: "v1.6.0-auth"
       dockerfile: authentication/Dockerfile
       docker_context: ./authentication
     secrets:
@@ -69,7 +69,7 @@ jobs:
       ghcr_user: ${{github.actor}}
       base_image_name: ghcr.io/dmijatovic/rsd-saas/database
       image_tag: ${{needs.release_tag.outputs.tag}}
-      service_tag: "db.v3.0.1"
+      service_tag: "v3.0.1-db"
       dockerfile: database/Dockerfile
       docker_context: ./database
     secrets:
@@ -85,7 +85,7 @@ jobs:
       ghcr_user: ${{github.actor}}
       base_image_name: ghcr.io/dmijatovic/rsd-saas/backend
       image_tag: ${{needs.release_tag.outputs.tag}}
-      service_tag: "be.v1.13.0"
+      service_tag: "v1.13.0-be"
       dockerfile: backend-postgrest/Dockerfile
       docker_context: ./backend-postgrest
     secrets:
@@ -100,7 +100,7 @@ jobs:
       ghcr_user: ${{github.actor}}
       base_image_name: ghcr.io/dmijatovic/rsd-saas/background-services
       image_tag: ${{needs.release_tag.outputs.tag}}
-      service_tag: "bs.v1.0.0"
+      service_tag: "v1.0.0-bs"
       dockerfile: background-services/Dockerfile
       docker_context: ./background-services
     secrets:
@@ -116,7 +116,7 @@ jobs:
       ghcr_user: ${{github.actor}}
       base_image_name: ghcr.io/dmijatovic/rsd-saas/frontend
       image_tag: ${{needs.release_tag.outputs.tag}}
-      service_tag: "fe.v3.3.0"
+      service_tag: "v3.3.0-fe"
       dockerfile: frontend/Dockerfile
       docker_context: ./frontend
     secrets:
@@ -132,7 +132,7 @@ jobs:
       ghcr_user: ${{github.actor}}
       base_image_name: ghcr.io/dmijatovic/rsd-saas/nginx
       image_tag: ${{needs.release_tag.outputs.tag}}
-      service_tag: "ng.v1.1.4"
+      service_tag: "v1.1.4-ng"
       dockerfile: nginx/Dockerfile
       docker_context: ./nginx
     secrets:
@@ -148,7 +148,7 @@ jobs:
       ghcr_user: ${{github.actor}}
       base_image_name: ghcr.io/dmijatovic/rsd-saas/codemeta
       image_tag: ${{needs.release_tag.outputs.tag}}
-      service_tag: "cm.v1.1.4"
+      service_tag: "v1.1.4-cm"
       dockerfile: codemeta/Dockerfile
       docker_context: ./codemeta
     secrets:
@@ -164,7 +164,7 @@ jobs:
       ghcr_user: ${{github.actor}}
       base_image_name: ghcr.io/dmijatovic/rsd-saas/scrapers
       image_tag: ${{needs.release_tag.outputs.tag}}
-      service_tag: "sc.v1.9.0"
+      service_tag: "v1.9.0-sc"
       dockerfile: scrapers/Dockerfile
       docker_context: ./scrapers
     secrets:
@@ -180,7 +180,7 @@ jobs:
       ghcr_user: ${{github.actor}}
       base_image_name: ghcr.io/dmijatovic/rsd-saas/documentation
       image_tag: ${{needs.release_tag.outputs.tag}}
-      service_tag: "dc.v3.0.0"
+      service_tag: "${{needs.release_tag.outputs.tag}}-docs"
       dockerfile: documentation/Dockerfile
       docker_context: ./documentation
     secrets:
