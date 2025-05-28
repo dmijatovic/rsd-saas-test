@@ -64,6 +64,7 @@ jobs:
       ghcr_user: ${{github.actor}}
       base_image_name: ghcr.io/research-software-directory/rsd-saas/auth
       image_tag: ${{needs.release_tag.outputs.tag}}
+      service_tag: "auth-v1.6.0"
       dockerfile: authentication/Dockerfile
       docker_context: ./authentication
     secrets:
@@ -79,6 +80,7 @@ jobs:
       ghcr_user: ${{github.actor}}
       base_image_name: ghcr.io/research-software-directory/rsd-saas/database
       image_tag: ${{needs.release_tag.outputs.tag}}
+      service_tag: "db-v3.0.0"
       dockerfile: database/Dockerfile
       docker_context: ./database
     secrets:
@@ -94,6 +96,7 @@ jobs:
       ghcr_user: ${{github.actor}}
       base_image_name: ghcr.io/research-software-directory/rsd-saas/backend
       image_tag: ${{needs.release_tag.outputs.tag}}
+      service_tag: "be-v1.13.0"
       dockerfile: backend-postgrest/Dockerfile
       docker_context: ./backend-postgrest
     secrets:
@@ -109,6 +112,7 @@ jobs:
       ghcr_user: ${{github.actor}}
       base_image_name: ghcr.io/research-software-directory/rsd-saas/background-services
       image_tag: ${{needs.release_tag.outputs.tag}}
+      service_tag: "bs-v1.0.0"
       dockerfile: background-services/Dockerfile
       docker_context: ./background-services
     secrets:
@@ -124,6 +128,7 @@ jobs:
       ghcr_user: ${{github.actor}}
       base_image_name: ghcr.io/research-software-directory/rsd-saas/frontend
       image_tag: ${{needs.release_tag.outputs.tag}}
+      service_tag: "fe-v3.1.0"
       dockerfile: frontend/Dockerfile
       docker_context: ./frontend
     secrets:
@@ -139,6 +144,7 @@ jobs:
       ghcr_user: ${{github.actor}}
       base_image_name: ghcr.io/research-software-directory/rsd-saas/nginx
       image_tag: ${{needs.release_tag.outputs.tag}}
+      service_tag: "ng-${{needs.release_tag.outputs.tag}}"
       dockerfile: nginx/Dockerfile
       docker_context: ./nginx
     secrets:
@@ -154,6 +160,7 @@ jobs:
       ghcr_user: ${{github.actor}}
       base_image_name: ghcr.io/research-software-directory/rsd-saas/codemeta
       image_tag: ${{needs.release_tag.outputs.tag}}
+      service_tag: "cm-${{needs.release_tag.outputs.tag}}"
       dockerfile: codemeta/Dockerfile
       docker_context: ./codemeta
     secrets:
@@ -169,6 +176,7 @@ jobs:
       ghcr_user: ${{github.actor}}
       base_image_name: ghcr.io/research-software-directory/rsd-saas/scrapers
       image_tag: ${{needs.release_tag.outputs.tag}}
+      service_tag: "sc-${{needs.release_tag.outputs.tag}}"
       dockerfile: scrapers/Dockerfile
       docker_context: ./scrapers
     secrets:
@@ -184,6 +192,7 @@ jobs:
       ghcr_user: ${{github.actor}}
       base_image_name: ghcr.io/research-software-directory/rsd-saas/documentation
       image_tag: ${{needs.release_tag.outputs.tag}}
+      service_tag: "dc-${{needs.release_tag.outputs.tag}}"
       dockerfile: documentation/Dockerfile
       docker_context: ./documentation
     secrets:
@@ -284,6 +293,6 @@ jobs:
       # need to pass PAT using secrets prop to reusable workflow (module)
       # the secrets are not passed automatically to child modules
       # see https://docs.github.com/en/enterprise-cloud@latest/actions/using-workflows/reusing-workflows#passing-inputs-and-secrets-to-a-reusable-workflow
-      token: ${{ secrets.PAT_RELEASE }}
+      token: ${{ secrets.PAT_RELEASE_REPO }}
 
 
