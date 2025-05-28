@@ -22,12 +22,15 @@ jobs:
   release_tag:
     name: extract version from release tag
     runs-on: ubuntu-22.04
+    outputs:
+      tag: ${{steps.version.outputs.tag}}
     steps:
-      - name: set output to tag
-        id: tag
+      - name: extract version from tag
+        id: version
         run: |
-          echo ::set-output name=tag::${GITHUB_REF/refs\/tags\//}
-          echo "{tag}={${GITHUB_REF/refs\/tags\//}}" >> $GITHUB_OUTPUT
+          # echo ::set-output name=tag::${GITHUB_REF/refs\/tags\//}
+          echo version = ${GITHUB_REF/refs\/tags\//}
+          echo "{tag}=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
 
   log_release_tag:
     needs: release_tag
@@ -40,7 +43,7 @@ jobs:
           echo release_tag=${{ needs.release_tag.outputs.tag }}
   auth:
     # it needs to be checked on string value
-    if: github.ref != ''
+    if: needs.release_tag.outputs.tag != ''
     needs: [release_tag, log_release_tag]
     name: auth
     uses: ./.github/workflows/_ghcr.yml
