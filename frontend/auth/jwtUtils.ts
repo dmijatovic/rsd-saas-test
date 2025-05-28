@@ -1,3 +1,8 @@
+// SPDX-FileCopyrightText: 2022 Dusan Mijatovic (dv4all)
+// SPDX-FileCopyrightText: 2022 dv4all
+//
+// SPDX-License-Identifier: Apache-2.0
+
 import jwt from 'jsonwebtoken'
 import logger from '../utils/logger'
 
@@ -25,7 +30,10 @@ export function decodeJwt(token: string) {
 export function getAccountFromToken(token?: string) {
   if (token) {
     const user = jwt.decode(token) as any
-    return user?.account
+    return {
+      account: user?.account as string,
+      role: user?.role as string
+    }
   }
   return undefined
 }

@@ -1,27 +1,41 @@
+// SPDX-FileCopyrightText: 2022 - 2023 Dusan Mijatovic (dv4all)
+// SPDX-FileCopyrightText: 2022 - 2023 dv4all
+// SPDX-FileCopyrightText: 2022 Christian Meeßen (GFZ) <christian.meessen@gfz-potsdam.de>
+// SPDX-FileCopyrightText: 2022 Dusan Mijatovic (dv4all) (dv4all)
+// SPDX-FileCopyrightText: 2022 Helmholtz Centre Potsdam - GFZ German Research Centre for Geosciences
+// SPDX-FileCopyrightText: 2024 Dusan Mijatovic (Netherlands eScience Center)
+// SPDX-FileCopyrightText: 2024 Netherlands eScience Center
+//
+// SPDX-License-Identifier: Apache-2.0
+
 import {useEffect} from 'react'
-import {
-  Button, Dialog, DialogActions, DialogContent,
-  DialogTitle, useMediaQuery
-} from '@mui/material'
-import SaveIcon from '@mui/icons-material/Save'
+import Button from '@mui/material/Button'
+import Dialog from '@mui/material/Dialog'
+import DialogActions from '@mui/material/DialogActions'
+import DialogContent from '@mui/material/DialogContent'
+import DialogTitle from '@mui/material/DialogTitle'
+import useMediaQuery from '@mui/material/useMediaQuery'
 import {useForm} from 'react-hook-form'
 
 import ControlledTextField from '../../../form/ControlledTextField'
-import {testimonialInformation as config} from '../editSoftwareConfig'
-import {Testimonial} from '../../../../types/Testimonial'
+import {NewTestimonial, Testimonial} from '../../../../types/Testimonial'
+import SubmitButtonWithListener from '~/components/form/SubmitButtonWithListener'
 
 type EditTestimonialModalProps = {
+  config: any,
   open: boolean,
   onCancel: () => void,
-  onSubmit: ({data, pos}: { data: Testimonial, pos?: number }) => void,
-  testimonial?: Testimonial,
+  onSubmit: ({data, pos}: { data: Testimonial|NewTestimonial, pos?: number }) => void,
+  testimonial?: Testimonial|NewTestimonial,
   // item position in the array
   pos?: number
 }
 
-export default function EditTestimonialModal({open, onCancel, onSubmit, testimonial, pos}: EditTestimonialModalProps) {
+const formId='edit-testimonial-modal'
+
+export default function EditTestimonialModal({config,open,onCancel,onSubmit,testimonial,pos}: EditTestimonialModalProps) {
   const smallScreen = useMediaQuery('(max-width:600px)')
-  const {handleSubmit, watch, formState, reset, control, register, setValue} = useForm<Testimonial>({
+  const {handleSubmit, watch, formState, reset, control, register} = useForm<Testimonial|NewTestimonial>({
     mode: 'onChange',
     defaultValues: {
       ...testimonial
@@ -31,15 +45,6 @@ export default function EditTestimonialModal({open, onCancel, onSubmit, testimon
   // extract
   const {isValid, isDirty} = formState
   const formData = watch()
-
-  // console.group('EditTestimonialModal')
-  // console.log('open...', open)
-  // console.log('isDirty...', isDirty)
-  // console.log('isValid...', isValid)
-  // console.log('smallScreen...', smallScreen)
-  // console.log('testimonial...', testimonial)
-  // console.log('formData...', formData)
-  // console.groupEnd()
 
   useEffect(() => {
     if (testimonial) {
@@ -55,7 +60,8 @@ export default function EditTestimonialModal({open, onCancel, onSubmit, testimon
   }
 
   return (
-     <Dialog
+    <Dialog
+      data-testid="edit-testimonial-modal"
       // use fullScreen modal for small screens (< 600px)
       fullScreen={smallScreen}
       open={open}
@@ -70,16 +76,18 @@ export default function EditTestimonialModal({open, onCancel, onSubmit, testimon
       }}>
         Testimonial
       </DialogTitle>
-      <form onSubmit={handleSubmit((data: Testimonial) => onSubmit({data, pos}))}
+      <form
+        id={formId}
+        onSubmit={handleSubmit((data: Testimonial|NewTestimonial) => onSubmit({data, pos}))}
         autoComplete="off"
       >
         {/* hidden inputs */}
         <input type="hidden"
           {...register('id')}
         />
-        <input type="hidden"
+        {/* <input type="hidden"
           {...register('software')}
-        />
+        /> */}
         <input type="hidden"
           {...register('position')}
         />
@@ -130,23 +138,10 @@ export default function EditTestimonialModal({open, onCancel, onSubmit, testimon
           >
             Cancel
           </Button>
-          <Button
-            tabIndex={0}
-            type="submit"
-            variant="contained"
-            sx={{
-              // overwrite tailwind preflight.css for submit type
-              '&[type="submit"]:not(.Mui-disabled)': {
-                backgroundColor:'primary.main'
-              }
-            }}
-            endIcon={
-              <SaveIcon />
-            }
+          <SubmitButtonWithListener
+            formId={formId}
             disabled={isSaveDisabled()}
-          >
-            Save
-          </Button>
+          />
         </DialogActions>
       </form>
     </Dialog>

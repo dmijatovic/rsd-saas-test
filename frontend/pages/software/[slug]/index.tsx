@@ -1,80 +1,114 @@
+// SPDX-FileCopyrightText: 2021 - 2023 Dusan Mijatovic (dv4all)
+// SPDX-FileCopyrightText: 2021 - 2024 dv4all
+// SPDX-FileCopyrightText: 2022 - 2024 Helmholtz Centre Potsdam - GFZ German Research Centre for Geosciences
+// SPDX-FileCopyrightText: 2022 Christian Meeßen (GFZ) <christian.meessen@gfz-potsdam.de>
+// SPDX-FileCopyrightText: 2023 - 2024 Felix Mühlbauer (GFZ) <felix.muehlbauer@gfz-potsdam.de>
+// SPDX-FileCopyrightText: 2023 - 2025 Dusan Mijatovic (Netherlands eScience Center)
+// SPDX-FileCopyrightText: 2023 - 2025 Netherlands eScience Center
+//
+// SPDX-License-Identifier: Apache-2.0
+
 import {useEffect, useState} from 'react'
 import {GetServerSidePropsContext} from 'next'
+import {ScriptProps} from 'next/script'
 
-import {app} from '../../../config/app'
-import PageMeta from '../../../components/seo/PageMeta'
-import OgMetaTags from '../../../components/seo/OgMetaTags'
-import CitationMeta from '../../../components/seo/CitationMeta'
-import CanoncialUrl from '../../../components/seo/CanonicalUrl'
-import AppHeader from '../../../components/layout/AppHeader'
-import AppFooter from '../../../components/layout/AppFooter'
-import PageContainer from '../../../components/layout/PageContainer'
-import ContentInTheMiddle from '../../../components/layout/ContentInTheMiddle'
-import SoftwareIntroSection from '../../../components/software/SoftwareIntroSection'
-import GetStartedSection from '../../../components/software/GetStartedSection'
-import CitationSection from '../../../components/software/CitationSection'
-import AboutSection from '../../../components/software/AboutSection'
-import MentionsSection from '../../../components/software/MentionsSection'
-import ContributorsSection from '../../../components/software/ContributorsSection'
-import TestimonialSection from '../../../components/software/TestimonialsSection'
-import RelatedToolsSection from '../../../components/software/RelatedToolsSection'
+import {app} from '~/config/app'
+import {getAccountFromToken} from '~/auth/jwtUtils'
+import {isMaintainerOfSoftware} from '~/auth/permissions/isMaintainerOfSoftware'
+import {getMaintainerOrganisations} from '~/auth/permissions/isMaintainerOfOrganisation'
+import {getCommunitiesOfMaintainer} from '~/auth/permissions/isMaintainerOfCommunity'
+import PageMeta from '~/components/seo/PageMeta'
+import OgMetaTags from '~/components/seo/OgMetaTags'
+import CitationMeta from '~/components/seo/CitationMeta'
+import CanonicalUrl from '~/components/seo/CanonicalUrl'
+import AppHeader from '~/components/AppHeader'
+import AppFooter from '~/components/AppFooter'
+import SoftwareIntroSection from '~/components/software/SoftwareIntroSection'
+import GetStartedSection from '~/components/software/GetStartedSection'
+import CitationSection from '~/components/software/CitationSection'
+import AboutSection from '~/components/software/AboutSection'
+import ContributorsSection from '~/components/software/ContributorsSection'
+import TestimonialSection from '~/components/software/TestimonialsSection'
+import EditPageButton from '~/components/layout/EditPageButton'
+import OrganisationsSection from '~/components/software/OrganisationsSection'
+import RelatedProjectsSection from '~/components/projects/RelatedProjectsSection'
+import RelatedSoftwareSection from '~/components/software/RelatedSoftwareSection'
+import CommunitiesSection from '~/components/software/CommunitiesSection'
 import {
   getSoftwareItem,
-  getRepostoryInfoForSoftware,
-  getCitationsForSoftware,
-  getTagsForSoftware,
+  getRepositoryInfoForSoftware,
   getLicenseForSoftware,
-  getContributorMentionCount,
   getRemoteMarkdown,
-  ContributorMentionCount,
-} from '../../../utils/getSoftware'
-import {isMaintainerOfSoftware} from '../../../utils/editSoftware'
-import logger from '../../../utils/logger'
-import {License, RelatedTools, RepositoryInfo, SoftwareItem, Tag} from '../../../types/SoftwareTypes'
-import {SoftwareCitationInfo} from '../../../types/SoftwareCitation'
-import {ScriptProps} from 'next/script'
-import {Contributor} from '../../../types/Contributor'
-import {Testimonial} from '../../../types/Testimonial'
-import {getDisplayName} from '../../../utils/getDisplayName'
-import {getAccountFromToken} from '../../../auth/jwtUtils'
-import EditSoftwareButton from '../../../components/software/edit/EditSoftwareButton'
-import {getContributorsForSoftware} from '../../../utils/editContributors'
-import {getTestimonialsForSoftware} from '../../../utils/editTestimonial'
-import {getRelatedToolsForSoftware} from '../../../utils/editRelatedSoftware'
-import {MentionForSoftware} from '../../../types/MentionType'
-import {getMentionsForSoftware} from '../../../utils/editMentions'
+  getKeywordsForSoftware,
+  getCategoriesForSoftware,
+  getRelatedProjectsForSoftware,
+  getReleasesForSoftware,
+  SoftwareVersion,
+  getCommunitiesOfSoftware,
+} from '~/utils/getSoftware'
+import logger from '~/utils/logger'
+import {getDisplayName} from '~/utils/getDisplayName'
+import {getRelatedSoftwareForSoftware} from '~/utils/editRelatedSoftware'
+import {getMentionsBySoftware} from '~/utils/editMentions'
+import {getParticipatingOrganisations} from '~/utils/editOrganisation'
+import {
+  LicenseForSoftware,
+  KeywordForSoftware, RepositoryInfo,
+  SoftwareItem, SoftwareOverviewItemProps
+} from '~/types/SoftwareTypes'
+import {Person} from '~/types/Contributor'
+import {Testimonial} from '~/types/Testimonial'
+import {MentionItemProps} from '~/types/Mention'
+import {ParticipatingOrganisationProps} from '~/types/Organisation'
+import {RelatedProject} from '~/types/Project'
+import {CategoryPath} from '~/types/Category'
+import NoContent from '~/components/layout/NoContent'
+import DarkThemeSection from '~/components/layout/DarkThemeSection'
+import MentionsSection from '~/components/mention/MentionsSection'
+import {getReferencePapersForSoftware} from '~/components/software/edit/mentions/reference-papers/apiReferencePapers'
+import {PackageManager, getPackageManagers} from '~/components/software/edit/package-managers/apiPackageManager'
+import {getContributorsForSoftware} from '~/components/software/edit/contributors/apiContributors'
+import {CommunitiesOfSoftware} from '~/components/software/edit/communities/apiSoftwareCommunities'
+import CategoriesSection from '~/components/software/CategoriesSection'
+import {getTestimonialsForSoftware} from '~/components/software/edit/testimonials/apiSoftwareTestimonial'
+import {useSoftwareCategoriesFilter} from '~/components/category/useCategoriesFilter'
 
 interface SoftwareIndexData extends ScriptProps{
   slug: string
   software: SoftwareItem
-  citationInfo: SoftwareCitationInfo
-  tagsInfo: Tag[]
-  licenseInfo: License[]
+  releases: SoftwareVersion[]
+  keywords: KeywordForSoftware[]
+  categories: CategoryPath[]
+  licenseInfo: LicenseForSoftware[]
   repositoryInfo: RepositoryInfo
-  softwareIntroCounts: ContributorMentionCount
-  mentions: MentionForSoftware[]
+  mentions: MentionItemProps[]
+  referencePapers: MentionItemProps[]
   testimonials: Testimonial[]
-  contributors: Contributor[]
-  relatedTools: RelatedTools[]
-  isMaintainer: boolean
+  contributors: Person[]
+  relatedSoftware: SoftwareOverviewItemProps[]
+  relatedProjects: RelatedProject[]
+  organisations: ParticipatingOrganisationProps[],
+  packages: PackageManager[],
+  communities: CommunitiesOfSoftware[],
+  isMaintainer: boolean,
+  orgMaintainer: string[],
+  comMaintainer: string[]
 }
 
 export default function SoftwareIndexPage(props:SoftwareIndexData) {
-  const [resolvedUrl, setResolvedUrl] = useState('')
   const [author, setAuthor] = useState('')
   // extract data from props
   const {
-    software, citationInfo, tagsInfo,
-    licenseInfo, repositoryInfo, softwareIntroCounts,
-    mentions, testimonials, contributors,
-    relatedTools, isMaintainer, slug
+    software, releases, keywords, licenseInfo, repositoryInfo,
+    mentions, testimonials, contributors, relatedSoftware,
+    relatedProjects, isMaintainer, slug, organisations, referencePapers,
+    packages, communities, categories, orgMaintainer, comMaintainer
   } = props
+  // split categories in two groups and filter by category status
+  const [highlightedCategories, filteredCategories] = useSoftwareCategoriesFilter({
+    categories, isMaintainer, orgMaintainer, comMaintainer
+  })
 
-  useEffect(() => {
-    if (typeof location != 'undefined') {
-      setResolvedUrl(location.href)
-    }
-  }, [])
   useEffect(() => {
     const contact = contributors.filter(item => item.is_contact_person)
     if (contact.length > 0) {
@@ -84,19 +118,23 @@ export default function SoftwareIndexPage(props:SoftwareIndexData) {
   },[contributors])
 
   if (!software?.brand_name){
-    return (
-      <ContentInTheMiddle>
-        <h2>No content</h2>
-      </ContentInTheMiddle>
-    )
+    return <NoContent />
   }
+
+  // console.group('SoftwareIndexPage')
+  // console.log('highlightedCategories...', highlightedCategories)
+  // console.log('filteredCategories...', filteredCategories)
+  // console.log('categories...', categories)
+  // console.log('orgMaintainer...', orgMaintainer)
+  // console.log('comMaintainer...', comMaintainer)
+  // console.groupEnd()
 
   return (
     <>
       {/* Page Head meta tags */}
       <PageMeta
         title={`${software?.brand_name} | ${app.title}`}
-        description={software.short_statement}
+        description={software.short_statement ?? ''}
       />
       {/* Page Head meta tags */}
       <CitationMeta
@@ -108,51 +146,84 @@ export default function SoftwareIndexPage(props:SoftwareIndexData) {
       {/* Page Head meta tags */}
       <OgMetaTags
         title={software?.brand_name}
-        description={software.short_statement}
-        url={resolvedUrl}
+        description={software.short_statement ?? ''}
       />
-      <CanoncialUrl
-        canonicalUrl={resolvedUrl}
+      <CanonicalUrl />
+      <AppHeader />
+      {/* Edit page button only when maintainer */}
+      <EditPageButton
+        title="Edit software"
+        url={`${slug}/edit/information`}
+        isMaintainer={isMaintainer}
+        variant="contained"
       />
-      <AppHeader editButton={
-        isMaintainer ?
-        <EditSoftwareButton slug={slug} />
-        : undefined
-      }/>
-      <PageContainer>
-        <SoftwareIntroSection
-          brand_name={software.brand_name}
-          short_statement={software.short_statement}
-          counts={softwareIntroCounts}
-        />
-      </PageContainer>
+      <SoftwareIntroSection
+        brand_name={software.brand_name}
+        short_statement={software.short_statement ?? ''}
+        counts={{
+          mention_cnt: mentions.length ?? 0,
+          contributor_cnt: contributors.length ?? 0
+        }}
+      />
       <GetStartedSection
         get_started_url={software.get_started_url}
-        commit_history={repositoryInfo?.commit_history}
+        repositoryInfo={repositoryInfo}
       />
       <CitationSection
-        citationInfo={citationInfo}
+        releases={releases}
         concept_doi={software.concept_doi}
       />
       <AboutSection
         brand_name={software.brand_name}
         description={software?.description ?? ''}
-        tags={tagsInfo}
+        description_type={software?.description_type}
+        keywords={keywords}
+        categories={filteredCategories}
         licenses={licenseInfo}
-        repository={repositoryInfo?.url}
         languages={repositoryInfo?.languages}
+        repository={repositoryInfo?.url}
+        platform={repositoryInfo?.code_platform}
+        image_id={software.image_id}
+        packages={packages}
       />
-      <MentionsSection
-        mentions={mentions}
+      {/* Participating organisations */}
+      <OrganisationsSection
+        organisations={organisations}
       />
+      <DarkThemeSection>
+        {/* Reference papers */}
+        <MentionsSection
+          title="Reference papers"
+          mentions={referencePapers}
+        />
+        {/* Mentions */}
+        <MentionsSection
+          title="Mentions"
+          mentions={mentions}
+        />
+      </DarkThemeSection>
+      {/* Testimonials */}
       <TestimonialSection
         testimonials={testimonials}
       />
+      {/* Contributors */}
       <ContributorsSection
         contributors={contributors}
       />
-      <RelatedToolsSection
-        relatedTools={relatedTools}
+      <CategoriesSection
+        categories={highlightedCategories}
+      />
+      {/* Communities */}
+      <CommunitiesSection
+        communities={communities}
+      />
+      {/* Related projects (uses project components) */}
+      <RelatedProjectsSection
+        relatedProjects={relatedProjects}
+      />
+      {/* Related software */}
+      <RelatedSoftwareSection
+        relatedSoftware={relatedSoftware}
       />
       {/* bottom spacer */}
       <section className="py-12"></section>
@@ -169,7 +240,7 @@ export async function getServerSideProps(context:GetServerSidePropsContext) {
     // extract rsd_token
     const token = cookies['rsd_token']
     const slug = params?.slug?.toString()
-    const account = getAccountFromToken(token)
+    const userInfo = getAccountFromToken(token)
     const software = await getSoftwareItem(slug,token)
     // console.log('getServerSideProps...software...', software)
     if (typeof software == 'undefined'){
@@ -187,56 +258,83 @@ export async function getServerSideProps(context:GetServerSidePropsContext) {
       }
     }
     // fetch all info about software in parallel based on software.id
-    const fetchData = [
-      // citationInfo
-      getCitationsForSoftware(software.id,token),
-      // tagsInfo
-      getTagsForSoftware(software.id,false,token),
-      // licenseInfo
-      getLicenseForSoftware(software.id, false, token),
-      // repositoryInfo: url, languages and commits
-      getRepostoryInfoForSoftware(software.id, token),
-      // softwareMentionCounts
-      getContributorMentionCount(software.id,token),
-      // mentions
-      getMentionsForSoftware({software: software.id, frontend: false, token}),
-      // testimonials
-      getTestimonialsForSoftware({software:software.id,frontend: false,token}),
-      // contributors
-      getContributorsForSoftware({software:software.id,frontend:false,token}),
-      // relatedTools
-      getRelatedToolsForSoftware({software:software.id,frontend:false,token}),
-      // check if maintainer
-      isMaintainerOfSoftware({slug,account,token,frontend:false})
-    ]
     const [
-      citationInfo,
-      tagsInfo,
+      releases,
+      keywords,
+      categories,
       licenseInfo,
       repositoryInfo,
-      softwareIntroCounts,
       mentions,
       testimonials,
       contributors,
-      relatedTools,
-      isMaintainer
-    ] = await Promise.all(fetchData)
+      relatedSoftware,
+      relatedProjects,
+      isMaintainer,
+      organisations,
+      referencePapers,
+      packages,
+      communities,
+      orgMaintainer,
+      comMaintainer
+    ] = await Promise.all([
+      // software versions info
+      getReleasesForSoftware(software.id,token),
+      // keywords
+      getKeywordsForSoftware(software.id,token),
+      // categories
+      getCategoriesForSoftware(software.id, token),
+      // licenseInfo
+      getLicenseForSoftware(software.id, token),
+      // repositoryInfo: url, languages and commits
+      getRepositoryInfoForSoftware(software.id, token),
+      // mentions
+      getMentionsBySoftware({software:software.id,token}),
+      // testimonials
+      getTestimonialsForSoftware({software:software.id,token}),
+      // contributors
+      getContributorsForSoftware({software:software.id,token}),
+      // relatedTools
+      getRelatedSoftwareForSoftware({software: software.id, frontend: false, token}),
+      // relatedProjects
+      getRelatedProjectsForSoftware({software: software.id, token, frontend: false}),
+      // check if maintainer
+      isMaintainerOfSoftware({slug, account:userInfo?.account, token, frontend: false}),
+      // get organisations
+      getParticipatingOrganisations({software:software.id,frontend:false,token}),
+      // reference papers
+      getReferencePapersForSoftware({software:software.id,token}),
+      // package managers
+      getPackageManagers({software:software.id,token}),
+      // communities of software
+      getCommunitiesOfSoftware({software:software.id,token}),
+      // get list of organisations user maintains
+      getMaintainerOrganisations({token}),
+      // get list of communities user maintains
+      getCommunitiesOfMaintainer({token})
+    ])
 
     // pass data to page component as props
     return {
       props: {
         software,
-        citationInfo,
-        tagsInfo,
+        releases,
+        keywords,
+        categories,
         licenseInfo,
         repositoryInfo,
-        softwareIntroCounts,
         mentions,
+        referencePapers,
         testimonials,
         contributors,
-        relatedTools,
-        isMaintainer,
-        slug
+        relatedSoftware,
+        relatedProjects,
+        isMaintainer: isMaintainer ? isMaintainer : userInfo?.role==='rsd_admin',
+        organisations,
+        slug,
+        packages,
+        communities,
+        orgMaintainer,
+        comMaintainer
       }
     }
   }catch(e:any){

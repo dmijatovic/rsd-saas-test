@@ -1,33 +1,52 @@
-import {RepositoryInfo, SoftwareItem,Tag} from '../types/SoftwareTypes'
-import {SoftwareCitationInfo} from '../types/SoftwareCitation'
-import {extractCountFromHeader} from './extractCountFromHeader'
-import logger from './logger'
-import {createJsonHeaders} from './fetchHelpers'
+// SPDX-FileCopyrightText: 2021 - 2023 Dusan Mijatovic (dv4all)
+// SPDX-FileCopyrightText: 2021 - 2023 dv4all
+// SPDX-FileCopyrightText: 2022 - 2024 Ewan Cahen (Netherlands eScience Center) <e.cahen@esciencecenter.nl>
+// SPDX-FileCopyrightText: 2022 - 2024 Netherlands eScience Center
+// SPDX-FileCopyrightText: 2023 - 2024 Dusan Mijatovic (Netherlands eScience Center)
+// SPDX-FileCopyrightText: 2023 - 2024 Helmholtz Centre Potsdam - GFZ German Research Centre for Geosciences
+// SPDX-FileCopyrightText: 2023 Felix Mühlbauer (GFZ) <felix.muehlbauer@gfz-potsdam.de>
+// SPDX-FileCopyrightText: 2024 Christian Meeßen (GFZ) <christian.meessen@gfz-potsdam.de>
+//
+// SPDX-License-Identifier: Apache-2.0
 
-/**
- * postgREST api uri to retreive software index data.
+import logger from './logger'
+import {RelatedProjectForSoftware} from '~/types/Project'
+import {CommunitiesOfSoftware} from '~/components/software/edit/communities/apiSoftwareCommunities'
+import {
+  CategoriesForSoftware,
+  CategoryForSoftwareIds,
+  KeywordForSoftware,
+  LicenseForSoftware,
+  RepositoryInfo,
+  SoftwareItem,
+  SoftwareOverviewItemProps
+} from '~/types/SoftwareTypes'
+import {extractCountFromHeader} from './extractCountFromHeader'
+import {createJsonHeaders, getBaseUrl} from './fetchHelpers'
+
+/*
+ * Software list for the software overview page
  * Note! url should contain all query params. Use softwareUrl helper fn to construct url.
- * @param url with all query params for search,filtering, order and pagination
- * @returns {
-  * count:number,
-  * data:[]
- * }
  */
-export async function getSoftwareList(url:string){
+export async function getSoftwareList({url,token}:{url:string,token?:string }){
   try{
-    const headers = new Headers()
-    // request count for pagination
-    headers.append('Prefer','count=exact')
-    const resp = await fetch(url,{method:'GET', headers})
+    const resp = await fetch(url, {
+      method: 'GET',
+      headers: {
+        ...createJsonHeaders(token),
+        'Prefer':'count=exact'
+      },
+    })
 
     if ([200,206].includes(resp.status)){
-      const data:SoftwareItem[] = await resp.json()
+      const json: SoftwareOverviewItemProps[] = await resp.json()
+      // set
       return {
         count: extractCountFromHeader(resp.headers),
-        data
+        data: json
       }
-    } else{
-      logger(`getSoftwareList failed: ${resp.status} ${resp.statusText}`, 'warn')
+    } else {
+      logger(`getSoftwareList failed: ${resp.status} ${resp.statusText} ${url}`, 'warn')
       return {
         count:0,
         data:[]
@@ -46,7 +65,7 @@ export async function getSoftwareList(url:string){
 export async function getSoftwareItem(slug:string|undefined, token?:string){
   try {
     // console.log('token...', token)
-    // this request is always perfomed from backend
+    // this request is always performed from backend
     const url = `${process.env.POSTGREST_URL}/software?select=*,repository_url!left(url)&slug=eq.${slug}`
     let resp
     if (token) {
@@ -67,11 +86,11 @@ export async function getSoftwareItem(slug:string|undefined, token?:string){
 }
 
 // query for software item page based on software id
-export async function getRepostoryInfoForSoftware(software: string | undefined, token?: string) {
+export async function getRepositoryInfoForSoftware(software: string | undefined, token?: string) {
   try {
     // console.log('token...', token)
-    // this request is always perfomed from backend
-    const url = `${process.env.POSTGREST_URL}/repository_url?software=eq.${software}`
+    // this request is always performed from backend
+    const url = `${getBaseUrl()}/repository_url?software=eq.${software}`
     let resp
     if (token) {
       resp = await fetch(url, {
@@ -88,65 +107,48 @@ export async function getRepostoryInfoForSoftware(software: string | undefined, 
         const info: RepositoryInfo = {
           ...data[0],
           // parse JSONB
-          languages: JSON.parse(data[0].languages),
-          commit_history: JSON.parse(data[0].commit_history)
+          // languages: JSON.parse(data[0].languages),
+          languages: data[0].languages,
+          // commit_history: JSON.parse(data[0].commit_history)
+          commit_history: data[0].commit_history
         }
         return info
       }
       return null
     }
   } catch (e: any) {
-    logger(`getSoftwareItem: ${e?.message}`, 'error')
+    logger(`getRepositoryInfoForSoftware: ${e?.message}`, 'error')
     return null
-  }
-}
-
-// Get
-export type TagItem={
-  count: number
-  tag:string
-  active:boolean
-}
-export async function getTagsWithCount(){
-  try{
-    // this request is always perfomed from backend
-    const url = `${process.env.POSTGREST_URL}/count_software_per_tag?order=tag.asc`
-    const resp = await fetch(url,{method:'GET'})
-    if (resp.status===200){
-      const data:TagItem[] = await resp.json()
-      return data
-    } else if (resp.status===404){
-      logger(`getTagsWithCount: 404 [${url}]`,'error')
-      // query not found
-      return []
-    }
-  }catch(e:any){
-    logger(`getTagsWithCount: ${e?.message}`,'error')
-    return []
   }
 }
 
 
 /**
  * CITATIONS
- * @param uuid
- * @returns SoftwareCitationInfo
+ * @param uuid as software_id
+ * @returns SoftwareVersion[] | null
  */
 
-export async function getCitationsForSoftware(uuid:string,token?:string){
+export type SoftwareVersion = {
+  doi: string,
+  version: string,
+  doi_registration_date: string
+}
+
+export async function getReleasesForSoftware(uuid:string,token?:string){
   try{
-    // this request is always perfomed from backend
-    // the release content is order by date_published
-    const url = `${process.env.POSTGREST_URL}/release?select=*,release_content(*)&software=eq.${uuid}&release_content.order=date_published.desc`
+    // the releases are ordered by date descending
+    const query = `select=release(mention(doi,version,doi_registration_date))&id=eq.${uuid}&release.mention.order=doi_registration_date.desc`
+    const url = `${getBaseUrl()}/software?${query}`
     const resp = await fetch(url, {
       method: 'GET',
       headers: createJsonHeaders(token)
     })
     if (resp.status===200){
-      const data: SoftwareCitationInfo[] = await resp.json()
-      // console.log('data...', data)
-      if (data.length > 0) {
-        return data[0]
+      const data: any[] = await resp.json()
+      if (data.length === 1 && data[0]?.release?.mention) {
+        const releases: SoftwareVersion[] = data[0]['release']['mention']
+        return releases
       }
       return null
     } else if (resp.status===404){
@@ -154,113 +156,151 @@ export async function getCitationsForSoftware(uuid:string,token?:string){
       // query not found
       return null
     }
+    return null
   }catch(e:any){
     logger(`getReleasesForSoftware: ${e?.message}`,'error')
     return null
   }
 }
 
-
-export async function getTagsForSoftware(uuid:string,frontend?:boolean,token?:string){
+export async function getKeywordsForSoftware(uuid:string,token?:string){
   try{
-    // this request is always perfomed from backend
+    // this request is always performed from backend
     // the content is order by tag ascending
-    let url = `${process.env.POSTGREST_URL}/tag_for_software?software=eq.${uuid}&order=tag.asc`
-    if (frontend === true) {
-      url = `/api/v1/tag_for_software?software=eq.${uuid}&order=tag.asc`
-    }
+    const query = `rpc/keywords_by_software?software=eq.${uuid}&order=keyword.asc`
+    const url = `${getBaseUrl()}/${query}`
     const resp = await fetch(url, {
       method: 'GET',
       headers: createJsonHeaders(token)
     })
     if (resp.status===200){
-      const data:Tag[] = await resp.json()
+      const data:KeywordForSoftware[] = await resp.json()
       return data
     } else if (resp.status===404){
-      logger(`getTagsForSoftware: 404 [${url}]`,'error')
+      logger(`getKeywordsForSoftware: 404 [${url}]`,'error')
       // query not found
       return null
     }
   }catch(e:any){
-    logger(`getTagsForSoftware: ${e?.message}`,'error')
+    logger(`getKeywordsForSoftware: ${e?.message}`,'error')
     return null
   }
 }
 
-/**
- * LICENSE
- */
-
-export type License = {
-  id:string
-  software:string
-  license: string
+function prepareQueryURL(path: string, params?: Record<string, string>) {
+  let url = `${getBaseUrl()}${path}`
+  if (params) {
+    const paramStr = Object.keys(params).map((key) => `${key}=${encodeURIComponent(params[key])}`).join('&')
+    if (paramStr) url += '?' + paramStr
+  }
+  return url
 }
 
-export async function getLicenseForSoftware(uuid:string,frontend?:boolean,token?:string){
-  try{
-    // this request is always perfomed from backend
-    // the content is order by license ascending
-    let url = `${process.env.POSTGREST_URL}/license_for_software?&software=eq.${uuid}&order=license.asc`
-    if (frontend === true) {
-      url = `/api/v1/license_for_software?&software=eq.${uuid}&order=license.asc`
+export async function getCategoriesForSoftware(software_id: string, token?: string){
+  try {
+    const url = prepareQueryURL('/rpc/category_paths_by_software_expanded', {software_id})
+    const resp = await fetch(url, {
+      method: 'GET',
+      headers: createJsonHeaders(token)
+    })
+    if (resp.status === 200) {
+      const data:CategoriesForSoftware = await resp.json()
+      return data
+    } else {
+      logger(`getCategoriesForSoftware: ${resp.status} - ${resp.statusText} [${url}]`, 'error')
+      return []
     }
+  } catch (e: any) {
+    logger(`getCategoriesForSoftware: ${e?.message}`, 'error')
+    return []
+  }
+}
+
+export async function getCategoryForSoftwareIds(software_id: string, token?: string): Promise<CategoryForSoftwareIds> {
+  try {
+    const url = prepareQueryURL('/category_for_software', {software_id: `eq.${software_id}`, select: 'category_id'})
+    const resp = await fetch(url, {
+      method: 'GET',
+      headers: createJsonHeaders(token)
+    })
+    if (resp.status === 200) {
+      const data = await resp.json()
+      return new Set(data.map((entry: any) => entry.category_id))
+    } else if (resp.status === 404) {
+      logger(`getCategoriesForSoftwareIds: 404 [${url}]`, 'error')
+      throw new Error('Couldn\'t find the categories for this software')
+    } else {
+      logger(`getCategoriesForSoftwareIds: ${resp.status} [${url}]`, 'error')
+      throw new Error('Couldn\'t load the categories for this software')
+    }
+  } catch (e: any) {
+    logger(`getCategoriesForSoftwareIds: ${e?.message}`, 'error')
+    throw e
+  }
+}
+
+export async function addCategoryToSoftware(softwareId: string, categoryId: string, token: string) {
+  const url = prepareQueryURL('/category_for_software')
+  const data = {software_id: softwareId, category_id: categoryId}
+
+  const resp = await fetch(url, {
+    method: 'POST',
+    headers: {
+      ...createJsonHeaders(token),
+    },
+    body: JSON.stringify(data),
+  })
+
+  if (resp.ok) {
+    return null
+  }
+  throw new Error(`API returned: ${resp.status} ${resp.statusText}`)
+}
+
+export async function deleteCategoryToSoftware(softwareId: string, categoryId: string, token: string) {
+  const url = prepareQueryURL(`/category_for_software?software_id=eq.${softwareId}&category_id=eq.${categoryId}`)
+
+  const resp = await fetch(url, {
+    method: 'DELETE',
+    headers: {
+      ...createJsonHeaders(token),
+    },
+  })
+
+  if (resp.ok) {
+    return null
+  }
+  throw new Error(`API returned: ${resp.status} ${resp.statusText}`)
+}
+
+/**
+ * LICENSE FOR SOFTWARE
+*/
+export async function getLicenseForSoftware(uuid:string,token?:string){
+  try{
+    // this request is always performed from backend
+    // the content is order by license ascending
+    const url = `${getBaseUrl()}/license_for_software?&software=eq.${uuid}&order=license.asc`
     const resp = await fetch(url, {
       method: 'GET',
       headers: createJsonHeaders(token)
     })
     if (resp.status===200){
-      const data:License[] = await resp.json()
+      const data:LicenseForSoftware[] = await resp.json()
       return data
     } else if (resp.status===404){
       logger(`getLicenseForSoftware: 404 [${url}]`,'error')
       // query not found
-      return null
+      return []
     }
   }catch(e:any){
     logger(`getLicenseForSoftware: ${e?.message}`,'error')
-    return null
+    return []
   }
 }
 
 /**
- * Contributors and mentions counts
- */
-
-export type ContributorMentionCount = {
-  id: string
-  contributor_cnt: number | null
-  mention_cnt: number | null
-}
-
-export async function getContributorMentionCount(uuid: string,token?: string){
-  try{
-    // this request is always perfomed from backend
-    // the content is order by id ascending
-    const url = `${process.env.POSTGREST_URL}/count_software_contributors_mentions?id=eq.${uuid}`
-    const resp = await fetch(url, {
-      method: 'GET',
-      headers: createJsonHeaders(token)
-    })
-    if (resp.status===200){
-      const data: ContributorMentionCount[] = await resp.json()
-      if (data.length > 0) {
-        return data[0]
-      }
-      return null
-    } else if (resp.status===404){
-      logger(`getContributorMentionCount: 404 [${url}]`,'error')
-      // query not found
-      return null
-    }
-  }catch(e:any){
-    logger(`getContributorMentionCount: ${e?.message}`,'error')
-    return null
-  }
-}
-
-/**
- * REMOTE MARKDOWN FILE
+ * REMOTE MARKDOWN FILE called server side
  */
 export async function getRemoteMarkdown(url: string) {
   try {
@@ -286,7 +326,98 @@ export async function getRemoteMarkdown(url: string) {
     logger(`getRemoteMarkdown: ${e?.message}`, 'error')
     return {
       status: 404,
-      message: e?.message
+      message: 'Markdown file not found. Validate url.'
     }
+  }
+}
+
+/**
+ * Get remote markdown using RSD api.
+ * Validates the url returns text/markdown and not html page.
+ * If html page it returns suggested rawUrl for Github/Gitlab
+ * @param url
+ * @returns
+ */
+export async function apiRemoteMarkdown(url:string){
+  try{
+    const api = `/api/fe/markdown/raw?url=${encodeURI(url)}`
+    const resp = await fetch(api)
+    if (resp.ok){
+      const data:{
+        status:number,
+        message:string,
+        rawUrl?:string
+      } = await resp.json()
+      return data
+    }else{
+      return {
+        status: resp.status,
+        message: resp.statusText
+      }
+    }
+  }catch(e:any){
+    return {
+      status:500,
+      message: e?.message as string ?? 'Unknown server error'
+    }
+  }
+}
+
+// RELATED PROJECTS FOR SOFTWARE
+export async function getRelatedProjectsForSoftware({software, token, frontend, approved=true}:
+  { software: string, token?: string, frontend?: boolean, approved?:boolean }) {
+  try {
+    // construct api url based on request source
+    let query = `rpc/related_projects_for_software?software_id=${software}&order=current_state.desc,date_start.desc,title.asc`
+    if (approved) {
+      // select only approved relations
+      query +='&status=eq.approved&is_published=eq.true'
+    }
+    let url = `${process.env.POSTGREST_URL}/${query}`
+    if (frontend) {
+      url = `/api/v1/${query}`
+    }
+    const resp = await fetch(url, {
+      method: 'GET',
+      headers: createJsonHeaders(token)
+    })
+    if (resp.status === 200) {
+      const data: RelatedProjectForSoftware[] = await resp.json()
+      return data
+    }
+    logger(`getRelatedProjects: ${resp.status} ${resp.statusText} [${url}]`, 'warn')
+    // query not found
+    return []
+  } catch (e: any) {
+    logger(`getRelatedProjects: ${e?.message}`, 'error')
+    return []
+  }
+}
+
+type GetCommunitiesOfSoftware={
+  software:string
+  token?:string
+}
+
+export async function getCommunitiesOfSoftware({software,token}:GetCommunitiesOfSoftware){
+  try{
+    const query = `software_id=${software}&status=eq.approved&order=software_cnt.desc.nullslast,name`
+    const url = `${getBaseUrl()}/rpc/communities_of_software?${query}`
+
+    const resp = await fetch(url, {
+      method: 'GET',
+      headers: {
+        ...createJsonHeaders(token)
+      }
+    })
+    if (resp.ok){
+      const json:CommunitiesOfSoftware[] = await resp.json()
+      return json
+    }
+    logger(`getCommunitiesOfSoftware: ${resp.status}:${resp.statusText}`, 'warn')
+    return []
+  }catch(e:any){
+    logger(`getCommunitiesOfSoftware: ${e?.message}`, 'error')
+    return []
   }
 }

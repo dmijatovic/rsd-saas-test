@@ -1,93 +1,113 @@
+<!--
+SPDX-FileCopyrightText: 2021 - 2022 Dusan Mijatovic (dv4all)
+SPDX-FileCopyrightText: 2021 - 2022 Jason Maassen (Netherlands eScience Center) <j.maassen@esciencecenter.nl>
+SPDX-FileCopyrightText: 2021 - 2022 dv4all
+SPDX-FileCopyrightText: 2021 - 2025 Ewan Cahen (Netherlands eScience Center) <e.cahen@esciencecenter.nl>
+SPDX-FileCopyrightText: 2021 - 2025 Netherlands eScience Center
+SPDX-FileCopyrightText: 2021 Jesús García Gonzalez (Netherlands eScience Center) <j.g.gonzalez@esciencecenter.nl>
+SPDX-FileCopyrightText: 2022 - 2024 Christian Meeßen (GFZ) <christian.meessen@gfz-potsdam.de>
+SPDX-FileCopyrightText: 2022 - 2024 Helmholtz Centre Potsdam - GFZ German Research Centre for Geosciences
+
+SPDX-License-Identifier: CC-BY-4.0
+-->
+
 # RSD-as-a-service
 
 ![image](https://user-images.githubusercontent.com/4195550/136156498-736f915f-7623-43d2-8678-f30b06563a38.png)
 
-[![GitHub license](https://img.shields.io/badge/license-Apache--2.0%20-blue.svg)](https://github.com/research-software-directory/RSD-as-a-service/blob/main/LICENSE)
-[![fair-software.eu](https://img.shields.io/badge/fair--software.eu-%E2%97%8F%20%20%E2%97%8F%20%20%E2%97%8B%20%20%E2%97%8F%20%20%E2%97%8B-orange)](https://fair-software.eu)
-![All tests](https://github.com/research-software-directory/RSD-as-a-service/actions/workflows/tests_main.yml/badge.svg)
-[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](code_of_conduct.md)
-
 ## Our mission: To promote the visibility, impact and reuse of research software
 
-This repo contains the new RSD-as-a-service implementation
+This repo contains the new RSD-as-a-service implementation. The service can be found at: https://research-software-directory.org
 
-## Building
+## Badges
 
-The program can easily be built with `docker-compose`. Each service builds the image using specific version (see docker-compose.yml file). Ensure that the version number is increased in the `docker-compose.yml` file when the source code of that service is changed.
+| [fair-software.nl](https://fair-software.nl/) recommendations | |
+| :-- | :--  |
+| (1/5) code repository              | [![GitHub repo badge](https://img.shields.io/badge/github-repo-000.svg?logo=github&labelColor=gray&color=blue)](https://github.com/research-software-directory/RSD-as-a-service) |
+| (2/5) source code license          | [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0) |
+| &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; images & docs licenses       | [![License: CC BY 4.0](https://img.shields.io/badge/License-CC_BY_4.0-lightgrey.svg)](https://creativecommons.org/licenses/by/4.0/) [![License: CC BY-SA 4.0](https://img.shields.io/badge/License-CC_BY--SA_3.0-lightgrey.svg)](https://creativecommons.org/licenses/by-sa/3.0/) [![License: CC0-1.0](https://img.shields.io/badge/License-CC0_1.0-lightgrey.svg)](http://creativecommons.org/publicdomain/zero/1.0/) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) |
+| (3/5) community registry           | [![Research Software Directory](https://img.shields.io/badge/rsd-RSD--as--a--service-00a3e3.svg)](https://research-software-directory.org/software/rsd-ng) |
+| (4/5) citation                     | [![DOI](https://zenodo.org/badge/413814951.svg)](https://zenodo.org/badge/latestdoi/413814951) |
+| (5/5) checklist                    | [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/6336/badge)](https://bestpractices.coreinfrastructure.org/projects/6336) |
+| overall                            | [![fair-software.eu](https://img.shields.io/badge/fair--software.eu-%E2%97%8F%20%20%E2%97%8B%20%20%E2%97%8F%20%20%E2%97%8F%20%20%E2%97%8F-yellow)](https://fair-software.eu) |
+| **Other best practices**           | &nbsp; |
+| Contributor covenant               | [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md) |
+| Contribution guidelines             | [![Contribution Guidelines](https://img.shields.io/badge/Contribution%20Guidelines-4baaaa.svg)](CONTRIBUTING.md) |
+| **Tests**                          | &nbsp; |
+| Citation metadata consistency      | [![cffconvert](https://github.com/research-software-directory/RSD-as-a-service/actions/workflows/cff_validate.yml/badge.svg)](https://github.com/research-software-directory/RSD-as-a-service/actions/workflows/cff_validate.yml) | 
+| Frontend                           | [![Frontend tests](https://github.com/research-software-directory/RSD-as-a-service/actions/workflows/frontend_tests.yml/badge.svg)](https://github.com/research-software-directory/RSD-as-a-service/actions/workflows/frontend_tests.yml) [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=rsd-frontend&metric=coverage)](https://sonarcloud.io/summary/overall?id=rsd-frontend) | 
+| Backend                            | [![Backend tests](https://github.com/research-software-directory/RSD-as-a-service/actions/workflows/backend_tests.yml/badge.svg)](https://github.com/research-software-directory/RSD-as-a-service/actions/workflows/backend_tests.yml) |
+| Authentication                     | [![Authentication tests](https://github.com/research-software-directory/RSD-as-a-service/actions/workflows/authentication_tests.yml/badge.svg)](https://github.com/research-software-directory/RSD-as-a-service/actions/workflows/authentication_tests.yml) [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=nl.research-software%3Aauthentication&metric=coverage)](https://sonarcloud.io/summary/overall?id=nl.research-software%3Aauthentication) | 
+| Scrapers                           | [![Scraper tests](https://github.com/research-software-directory/RSD-as-a-service/actions/workflows/scrapers_tests.yml/badge.svg)](https://github.com/research-software-directory/RSD-as-a-service/actions/workflows/scrapers_tests.yml) [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=nl.research-software%3Ascrapers&metric=coverage)](https://sonarcloud.io/summary/overall?id=nl.research-software%3Ascrapers) | 
+| End-to-end                         | [![E2E tests Chrome](https://github.com/research-software-directory/RSD-as-a-service/actions/workflows/e2e_tests_chrome.yml/badge.svg)](https://github.com/research-software-directory/RSD-as-a-service/actions/workflows/e2e_tests_chrome.yml) |
 
-### Environment variables
+## How to build and run the RSD
 
-The environment variables should be stored in .env file, which is automatically loaded by docker-compose. To validate loading of env variables use `docker-compose config`. More info about use of environment variables in docker-compose is available at [official documentation](https://docs.docker.com/compose/environment-variables/)
+### Building from source code
 
-- copy the file `.env.example` to `.env` file at the root of the project
+1. Before installing the dependencies ensure that you have `docker` and `docker compose` V2 (see the [documentation of Docker Compose](https://docs.docker.com/compose/compose-v2/)) locally.
+2. You will also need `make` to automate the configuration and installation process.
+3. Set the required environment variables:
+   Copy the file `.env.example` to `.env` file at the root of the project
+   and fill the secrets and passwords. Check if the secrets are correct.
+   The `Makefile` will take care about creating an appropriate `frontend/.env.local`
+   from the `.env` file, needed only when developing the frontend.
+4. Run `make install` to install all dependencies and build the docker images.
 
-```bash
-# from project root dir
-cp .env.example .env
+### Running the services
+
+```
+# Start the containers via the make file
+make start
+# OR directly use docker compose
+docker compose up
 ```
 
-- `provide missing values in .env file (secrets)`
-- build local images
+### Stopping the services
 
-```bash
-# from project root dir
-docker-compose build
+```
+# Stop all services via the makefile
+make stop
+# OR directly use docker compose
+docker compose down
 ```
 
-## Running locally
+## Developing the RSD
 
-Run the command `docker-compose up`.
+We discourage the use of Safari for developing the RSD. The reason is that it is not possible to sign in with Safari on localhost, because Safari handles [secure cookies differently](https://codedamn.com/news/web-development/safari-cookie-is-not-being-set) from other browsers.
 
-```bash
-# from project root dir
-docker-compose up
+When you need DOIs to test out functionality involving mentions, some lists can be found at [pull request #808](https://github.com/research-software-directory/RSD-as-a-service/pull/808).
+
+For more details on developing the RSD, see the respective readmes in the varying directories.
+
+### Developing the frontend
+
+You can run frontend in development mode as docker a service (called frontend-dev) that enables hot reloading. By default this frontend-dev service will not be started automatically. For more detailed instructions see [frontend/README.md](frontend/README.md).
+
+```
+# Run frontend development using docker at http://localhost:3000
+make frontend-dev
+# OR use docker compose directly
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up 
 ```
 
-The application can be viewed on http://localhost
+It is possible to directly run the frontend too (without using a docker container). You must then have Node.js installed, see the `Dockerfile` in the frontend directory for the version in use.
 
-### Frontend with hot-module-replacement (HMR)
-
-To run frontend in the development mode with the hot-module-replacement (HMR) you should start additional instance of the frontend which will be available at http://localhost:3000
-
-```bash
-# navigate to frontend folder
-cd frontend
-# install dependencies
-yarn install
-# start fe in dev mode
-yarn dev
+```
+# Build and install all dependencies.
+make install
+# Run the frontend and the documentation on localhost:3000 and localhost:3030
+make dev
+# Stop all services with `docker compose down`
+make down
 ```
 
-More information about frontend setup is [available in the frontend readme file](/frontend/README.md).
+## License
 
-## Clear/remove data (reset)
+The content of this repository is licensed under several licenses. We follow the [REUSE specification](https://reuse.software/) to indicate which license applies to the files specifically. Here are some general hints:
 
-To clear the database, if the database structure has changed or you need to run data migration again, run the command:
+- Source code is licensed under `Apache-2.0`
+- Documentation and most images are licensed under `CC BY-4.0`
+- Some files with trivial content, e.g. configuration files, are licensed under `CC0-1.0`
 
-```bash
-docker-compose down --volumes
-```
-
-## Data migration
-
-A data migration script is available to migrate data from the legacy RSD to the new one:
-
-- run current RSD solution using `docker-compose up` from the root of the project
-- run the migration script using docker-compose file in the data-migration folder
-
-```bash
-# navigate to data-migration folder
-cd data-migration
-# run data migration docker-compose file
-docker-compose up
-```
-
-More information about [data migration is available here](data-migration/README.md).
-
-## Releases
-
-The info about creating release is [available here](RELEASES.md)
-
-## Tech Stack
-
-![image](/docs/rsd-stack-220304.png)
+For more details on the licenses, please have a look at the file headers or associated `*.license` files. The terms of all used licenses are located in the [LICENSES](./LICENSES/) directory.

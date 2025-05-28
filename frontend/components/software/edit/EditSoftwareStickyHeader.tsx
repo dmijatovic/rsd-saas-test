@@ -1,102 +1,40 @@
-import {useContext, useEffect, useState, useRef} from 'react'
-import {useRouter} from 'next/router'
-import Button from '@mui/material/Button'
-import SaveIcon from '@mui/icons-material/Save'
+// SPDX-FileCopyrightText: 2022 - 2023 Dusan Mijatovic (dv4all)
+// SPDX-FileCopyrightText: 2022 - 2023 dv4all
+// SPDX-FileCopyrightText: 2023 - 2024 Dusan Mijatovic (Netherlands eScience Center)
+// SPDX-FileCopyrightText: 2023 - 2024 Netherlands eScience Center
+//
+// SPDX-License-Identifier: Apache-2.0
+
+import {useState, useRef} from 'react'
 
 import StickyHeader from '../../layout/StickyHeader'
-import editSoftwareContext from './editSoftwareContext'
+import useStickyHeaderBorder from '~/components/layout/useStickyHeaderBorder'
+import useSoftwareContext from './useSoftwareContext'
+import ViewPageButton from '~/components/layout/ViewPageButton'
 
-export default function StickyHeaderEditSoftware() {
-  const {pageState} = useContext(editSoftwareContext)
-  const {isDirty, isValid} = pageState
+export default function EditSoftwareStickyHeader() {
+  const {software} = useSoftwareContext()
   const headerRef = useRef(null)
   const [classes, setClasses] = useState('')
-  const router = useRouter()
 
-  useEffect(() => {
-    /**
-     * Observe when header (h1 element) moves in/outside a certain area.
-     * It is used to add the border at the bottom of sticky header (border-b-2 class).
-     * The logic is oposite to "common" observer approach:
-     * 1. we ignore first 68px at the top of the screen.
-     * 2. when header reaches this area the observer will set isIntersecting flag to false
-     * 3. when isIntersecting===false, the header is at first 68px of the screen and we add border
-     * More info: https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API
-     */
-    const observer = new IntersectionObserver((e) => {
-      const h1 = e[0]
-      if (h1.isIntersecting===true) {
-        setClasses('')
-      } else {
-        setClasses('border-b-2')
-      }
-    }, {
-      //
-      rootMargin:'-68px'
-    })
-    const el = headerRef.current
-    if (el) {
-      observer.observe(el)
-    }
-    return () => {
-      // remove observer
-      if (observer && el) {
-        observer.unobserve(el)
-      }
-    }
-  },[])
-
-  function isSaveDisabled() {
-    if (isDirty === false || isValid === false) {
-      return true
-    }
-    return false
-  }
+  // add border when header is at the top of the page
+  useStickyHeaderBorder({
+    headerRef, setClasses
+  })
 
   return (
-    <StickyHeader className={`flex py-4 w-full bg-white ${classes}`}>
+    <StickyHeader className={`bg-base-100 ${classes}`}>
       <h1
         ref={headerRef}
-        className="flex-1 text-primary">
-        {pageState?.software?.brand_name || ''}
+        className="flex-1 xl:text-4xl">
+        {software?.brand_name || ''}
       </h1>
-      <div>
-        <Button
-          tabIndex={1}
-          type="button"
-          color="secondary"
-          onClick={() => {
-            const slug = router.query['slug']
-            router.push(`/software/${slug}`)
-          }}
-          sx={{
-            marginRight:'2rem'
-          }}
-        >
-          VIEW
-        </Button>
-        {pageState?.step?.formId ?
-          <Button
-            tabIndex={0}
-            type="submit"
-            variant="contained"
-            form={pageState?.step?.formId}
-            sx={{
-              // overwrite tailwind preflight.css for submit type
-              '&[type="submit"]:not(.Mui-disabled)': {
-                backgroundColor:'primary.main'
-              }
-            }}
-            endIcon={
-              <SaveIcon />
-            }
-            disabled={isSaveDisabled()}
-          >
-            Save
-          </Button>
-        : null
-        }
-      </div>
+      <ViewPageButton
+        title={`View ${software?.brand_name ?? 'software page'}`}
+        url={`/software/${software.slug}`}
+        disabled={typeof software === 'undefined'}
+        label="View software"
+      />
     </StickyHeader>
   )
 }
