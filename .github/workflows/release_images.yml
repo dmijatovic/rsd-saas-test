@@ -19,23 +19,34 @@ on:
   #   tags: [ 'v*.*.*' ]
 
 jobs:
+  release_tag:
+    name: extract version from release tag
+    runs-on: ubuntu-22.04
+    steps:
+      - name: set output to tag
+        id: tag
+        run: |
+          echo ::set-output name=tag::${GITHUB_REF/refs\/tags\//}
+          echo "{tag}={${GITHUB_REF/refs\/tags\//}}" >> $GITHUB_OUTPUT
+
   log_release_tag:
-    # needs: release_tag
+    needs: release_tag
     name: log version output
     runs-on: ubuntu-22.04
     steps:
       - name: info
         run: |
-          echo tag=${{ github.ref }}
+          echo github_ref=${{ github.ref }}
+          echo release_tag=${{ needs.release_tag.outputs.tag }}
   auth:
     # it needs to be checked on string value
     if: github.ref != ''
-    needs: log_release_tag
+    needs: [release_tag, log_release_tag]
     name: auth
     uses: ./.github/workflows/_ghcr.yml
     with:
       ghcr_user: ${{github.actor}}
-      base_image_name: ghcr.io/research-software-directory/rsd-saas/auth
+      base_image_name: ghcr.io/dmijatovic/rsd-saas/auth
       image_tag: ${{needs.release_tag.outputs.tag}}
       dockerfile: authentication/Dockerfile
       docker_context: ./authentication
