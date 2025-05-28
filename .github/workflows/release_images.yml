@@ -98,7 +98,7 @@ jobs:
     uses: ./.github/workflows/_ghcr.yml
     with:
       ghcr_user: ${{github.actor}}
-      base_image_name: ghcr.io/dmijatovic/rsd-saas/background-services
+      base_image_name: ghcr.io/dmijatovic/rsd-saas/bg-svc
       image_tag: ${{needs.release_tag.outputs.tag}}
       service_tag: "v1.0.0-bs"
       dockerfile: background-services/Dockerfile
