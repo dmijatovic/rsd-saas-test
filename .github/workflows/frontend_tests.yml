@@ -41,19 +41,6 @@ jobs:
       - name: "run unit test"
         working-directory: frontend
         run: npm run test:coverage
-      - name: Cache SonarCloud packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.sonar/cache
-          key: ${{ runner.os }}-sonar
-          restore-keys: ${{ runner.os }}-sonar
-      - name: SonarCloud Scan frontend
-        uses: sonarsource/sonarcloud-github-action@master
-        with:
-          projectBaseDir: frontend
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       - name: "run build test"
         working-directory: frontend
         run: npm run build
